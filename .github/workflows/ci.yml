@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, type-check and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  docker:
+    name: Docker build and smoke test
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: spending-insights:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test container
+        run: |
+          docker run -d --name app -p 8080:8080 spending-insights:ci
+          for i in $(seq 1 15); do
+            curl -fs http://localhost:8080 > /dev/null && break
+            sleep 1
+          done
+          echo "Root serves the app"
+          curl -fsS http://localhost:8080 | grep -q 'id="root"'
+          echo "Client-side routes fall back to index.html"
+          curl -fsS http://localhost:8080/transactions | grep -q 'id="root"'
+          echo "Security headers are present"
+          curl -fsSI http://localhost:8080 | grep -qi 'content-security-policy'
+          docker rm -f app
