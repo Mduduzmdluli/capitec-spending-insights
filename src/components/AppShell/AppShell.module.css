@@ -1,0 +1,129 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.skipLink {
+  position: absolute;
+  top: -100px;
+  left: var(--space-4);
+  z-index: 10;
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+}
+
+.skipLink:focus {
+  top: var(--space-4);
+}
+
+.header {
+  color: var(--color-on-header);
+  background: var(--color-header);
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.logoTile {
+  display: flex;
+  align-items: center;
+  height: 2.75rem;
+  padding: 0 var(--space-3);
+  flex-shrink: 0;
+  background: #ffffff;
+  border-radius: var(--radius-md);
+}
+
+.logo {
+  display: block;
+  width: auto;
+  height: 1.75rem;
+}
+
+.productName {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.customer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+}
+
+.customerText {
+  display: flex;
+  flex-direction: column;
+  line-height: var(--leading-snug);
+}
+
+.customerName {
+  font-weight: 500;
+}
+
+.account {
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-header-muted);
+}
+
+.customerSkeleton {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: rgb(255 255 255 / 0.15);
+  border-radius: var(--radius-full);
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-16);
+}
+
+.main:focus {
+  outline: none;
+}
+
+@media (min-width: 48rem) {
+  .headerInner {
+    padding: var(--space-5) var(--space-8);
+  }
+
+  .main {
+    padding: var(--space-10) var(--space-8) var(--space-16);
+  }
+}
