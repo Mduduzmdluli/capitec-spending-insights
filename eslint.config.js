@@ -8,7 +8,13 @@ import prettier from 'eslint-config-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', 'playwright-report', 'test-results']),
+  globalIgnores([
+    'dist',
+    'coverage',
+    'playwright-report',
+    'test-results',
+    'public/mockServiceWorker.js',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
