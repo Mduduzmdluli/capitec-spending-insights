@@ -12,6 +12,6 @@ let transactions: Transaction[] | null = null;
 
 /** Generated once, on first use, then reused for every request. */
 export function getTransactions(): Transaction[] {
-  transactions ??= generateTransactions({ seed: 42 });
+  transactions ??= generateTransactions({ seed: 42, days: 730 });
   return transactions;
 }

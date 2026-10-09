@@ -82,7 +82,7 @@ open coverage/index.html
 
 There is no real backend for this project. Instead, MSW intercepts network requests in the browser and responds like a REST API would, including realistic latency, validation errors and not-found responses. Because of this, MSW is deliberately included in the production build.
 
-The data is generated from a fixed seed, so it looks realistic but is the same every time. It covers the last 12 months for one fictional customer, with everyday spending at South African merchants, monthly debit orders and a monthly salary. Amounts are stored in cents to avoid floating-point rounding errors.
+The data is generated from a fixed seed, so it looks realistic but is the same every time. It covers the last two years for one fictional customer, with everyday spending at South African merchants, monthly debit orders and a monthly salary. Amounts are stored in cents to avoid floating-point rounding errors.
 
 ## Endpoints
 
