@@ -52,3 +52,9 @@ export async function apiGet<TSchema extends z.ZodType>(
   if (!result.success) throw new InvalidResponseError(result.error.issues);
   return result.data;
 }
+
+/** A message that is safe and helpful to show to the customer. */
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof ApiError || error instanceof InvalidResponseError) return error.message;
+  return 'Please check your connection and try again.';
+}
