@@ -20,7 +20,7 @@ export function DashboardPage() {
         </div>
         <PeriodSelector value={period} onChange={setPeriod} />
       </div>
-        <SpendingSummary period={period} range={range} />
+      <SpendingSummary period={period} range={range} />
     </div>
   );
 }
