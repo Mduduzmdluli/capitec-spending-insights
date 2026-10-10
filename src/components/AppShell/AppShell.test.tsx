@@ -11,7 +11,7 @@ describe('AppShell', () => {
       </AppShell>,
     );
 
-    expect(await screen.findByText('Thandi Mokoena')).toBeInTheDocument();
+    expect(await screen.findByText('Mduduzi Mdluli')).toBeInTheDocument();
     expect(screen.getByText('Account ending in 4821')).toBeInTheDocument();
   });
 

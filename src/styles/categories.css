@@ -1,0 +1,28 @@
+/* One colour per category. Red is avoided because it means "spent more" elsewhere. */
+:root {
+  --category-groceries: #2e8b67;
+  --category-dining: #d9822b;
+  --category-transport: #3a6fd8;
+  --category-fuel: #7a5af0;
+  --category-shopping: #c2457a;
+  --category-entertainment: #b8860b;
+  --category-utilities: #1f8a9e;
+  --category-airtime-data: #5b6b82;
+  --category-health: #8a5a3c;
+  --category-income: #1e7b4f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --category-groceries: #4fc08d;
+    --category-dining: #f0a257;
+    --category-transport: #7aa2f0;
+    --category-fuel: #a68ff7;
+    --category-shopping: #e37ba6;
+    --category-entertainment: #e0b54a;
+    --category-utilities: #4fc0d3;
+    --category-airtime-data: #9aaabd;
+    --category-health: #c99572;
+    --category-income: #4cc38a;
+  }
+}

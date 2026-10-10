@@ -3,8 +3,8 @@ import { generateTransactions } from './data/generate';
 
 export const MOCK_CUSTOMER: Customer = {
   id: 'cust_001',
-  firstName: 'Thandi',
-  lastName: 'Mokoena',
+  firstName: 'Mduduzi',
+  lastName: 'Mdluli',
   accountNumberMasked: '•••• 4821',
 };
 

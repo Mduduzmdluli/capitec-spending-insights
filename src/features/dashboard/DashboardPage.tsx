@@ -3,6 +3,7 @@ import { formatDateRange, getDateRange } from '../../lib/period';
 import styles from './DashboardPage.module.css';
 import { PeriodSelector } from './PeriodSelector/PeriodSelector';
 import { SpendingSummary } from './SpendingSummary/SpendingSummary.tsx';
+import { SpendingTrend } from './SpendingTrend/SpendingTrend.tsx';
 import { usePeriod } from './usePeriod';
 
 export function DashboardPage() {
@@ -21,6 +22,7 @@ export function DashboardPage() {
         <PeriodSelector value={period} onChange={setPeriod} />
       </div>
       <SpendingSummary period={period} range={range} />
+      <SpendingTrend period={period} range={range} />
     </div>
   );
 }
