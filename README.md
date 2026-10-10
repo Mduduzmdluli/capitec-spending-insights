@@ -147,3 +147,28 @@ The Docker image uses a multi-stage build. Node builds the app, and the final im
 ## Brand assets
 
 The Capitec name and logo are trademarks of Capitec Bank Limited and are used here solely for the purposes of this technical assessment.
+
+## How data flows
+
+Components never call `fetch` directly. Every request follows the same path, so swapping the mock API for a real one only changes the start and end of the chain.
+
+```
+Component (e.g. SpendingTrend)
+  → TanStack Query hook          src/api/hooks.ts
+  → endpoint function            src/api/customerApi.ts
+  → apiGet() calls fetch()       src/api/client.ts
+      ↓ request intercepted by MSW's service worker
+  → request handler              src/mocks/handlers.ts
+  → transaction data             src/mocks/db.ts
+      generated once from        src/mocks/data/generate.ts
+      using merchants, debit
+      orders and salary in       src/mocks/data/merchants.ts
+  → totals, trends, breakdowns   src/mocks/data/aggregations.ts
+      ↓ JSON response
+  → validated with Zod           src/api/client.ts
+  → rendered by the component
+```
+
+The mock data uses a fixed random seed, so it is realistic but identical on every run. Tests use the same handlers through `src/mocks/server.ts`, and individual tests can override a handler with fixed data using `server.use(...)`.
+
+To see requests in action, open the browser's DevTools, go to the Network tab and change the period: each section's request and its JSON response appear just as they would with a real server.
