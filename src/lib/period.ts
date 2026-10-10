@@ -45,3 +45,7 @@ export function formatDateRange({ from, to }: DateRange): string {
   const sameYear = start.getFullYear() === end.getFullYear();
   return `${format(start, sameYear ? 'd MMM' : 'd MMM yyyy')} – ${format(end, 'd MMM yyyy')}`;
 }
+
+export function getPeriodLabel(period: Period): string {
+  return PERIODS.find((p) => p.id === period)?.label ?? '';
+}
