@@ -1,12 +1,13 @@
 .page {
   display: grid;
-  gap: var(--space-8);
+  gap: var(--space-6);
 }
 
 .toolbar {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  margin-bottom: var(--space-2);
 }
 
 .heading {
@@ -25,10 +26,22 @@
   color: var(--color-ink-muted);
 }
 
+.insights {
+  display: grid;
+  gap: var(--space-6);
+}
+
 @media (min-width: 48rem) {
   .toolbar {
     flex-direction: row;
     align-items: flex-end;
     justify-content: space-between;
+  }
+}
+
+@media (min-width: 64rem) {
+  .insights {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
   }
 }
