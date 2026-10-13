@@ -42,3 +42,23 @@
     padding: var(--space-6) var(--space-8);
   }
 }
+
+/* On small phones, show only the avatar; the name stays available to screen readers */
+@media (max-width: 30rem) {
+  .customerText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .productName {
+    font-size: var(--text-base);
+  }
+
+  .logo {
+    height: 1.5rem;
+  }
+}

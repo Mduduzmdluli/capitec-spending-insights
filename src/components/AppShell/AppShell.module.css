@@ -127,3 +127,40 @@
     padding: var(--space-10) var(--space-8) var(--space-16);
   }
 }
+
+/* Let the brand area shrink, and wrap "Spending insights" neatly on the smallest phones */
+.brand {
+  min-width: 0;
+}
+
+.productName {
+  line-height: var(--leading-tight);
+}
+
+/* Phones: show only the avatar; the name stays available to screen readers */
+@media (max-width: 40rem) {
+  .customerText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .logo {
+    height: 1.5rem;
+  }
+}
+
+/* The smallest phones: the page heading already says what this page is */
+@media (max-width: 26rem) {
+  .productName {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}
