@@ -12,6 +12,9 @@ export type TransactionFilterState = {
 
 const DEFAULT_SORT: TransactionSort = 'date_desc';
 
+/** The transactions panel's id, so other sections can scroll to it. */
+export const TRANSACTIONS_PANEL_ID = 'transactions';
+
 /** Search, category, sort and page, stored in the URL. Invalid values fall back to defaults. */
 export function useTransactionFilters() {
   const [searchParams, setSearchParams] = useSearchParams();

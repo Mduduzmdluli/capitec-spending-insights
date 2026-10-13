@@ -121,3 +121,33 @@
   flex-shrink: 0;
   border-radius: var(--radius-md);
 }
+
+.rowButton {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: calc(100% + var(--space-4));
+  margin: calc(var(--space-2) * -1);
+  padding: var(--space-2);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  transition: background-color 150ms ease;
+}
+
+.rowButton:hover {
+  background: var(--color-surface-sunken);
+}
+
+.rowButton[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--category-color) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--category-color) 45%, transparent);
+}
+
+.track {
+  display: block;
+}

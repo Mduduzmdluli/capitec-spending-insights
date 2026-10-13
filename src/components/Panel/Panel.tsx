@@ -9,14 +9,18 @@ type PanelProps = {
   aside?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Makes the panel a target that other parts of the page can scroll and move focus to */
+  id?: string;
 };
 
 /** A titled section of the dashboard. The title labels the region for screen readers. */
-export function Panel({ title, description, aside, children, className }: PanelProps) {
+export function Panel({ title, description, aside, children, className, id }: PanelProps) {
   const headingId = useId();
 
   return (
     <section
+      id={id}
+      tabIndex={id ? -1 : undefined}
       className={[styles.panel, className].filter(Boolean).join(' ')}
       aria-labelledby={headingId}
     >

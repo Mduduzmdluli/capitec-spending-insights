@@ -3,13 +3,21 @@ import { useId, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { getErrorMessage } from '../../../api/client';
 import { useCategoryBreakdown } from '../../../api/hooks';
-import type { CategoryBreakdown as BreakdownData, DateRange } from '../../../api/schemas';
+import type {
+  CategoryBreakdown as BreakdownData,
+  CategoryId,
+  DateRange,
+} from '../../../api/schemas';
 import { ErrorState } from '../../../components/ErrorState/ErrorState';
 import { Money } from '../../../components/Money';
 import { Panel } from '../../../components/Panel/Panel';
 import { Skeleton } from '../../../components/Skeleton/Skeleton';
 import { CATEGORIES } from '../../../lib/categories';
 import { formatShare } from '../../../lib/formatPercent';
+import {
+  TRANSACTIONS_PANEL_ID,
+  useTransactionFilters,
+} from '../Transactions/useTransactionFilters';
 import styles from './CategoryBreakdown.module.css';
 
 type BreakdownItem = BreakdownData['categories'][number];
@@ -20,12 +28,27 @@ const countFormatter = new Intl.NumberFormat('en-ZA');
 const formatPaymentCount = (count: number) =>
   `${countFormatter.format(count)} ${count === 1 ? 'payment' : 'payments'}`;
 
+/** Bring the transactions list into view and move focus there for keyboard users. */
+function goToTransactions() {
+  const target = document.getElementById(TRANSACTIONS_PANEL_ID);
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  target?.scrollIntoView?.({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  target?.focus({ preventScroll: true });
+}
+
 type CategoryBreakdownProps = {
   range: DateRange;
 };
 
 export function CategoryBreakdown({ range }: CategoryBreakdownProps) {
   const { data, error, isPending, isError, isFetching, refetch } = useCategoryBreakdown(range);
+  const { filters, update } = useTransactionFilters();
+
+  const toggleCategory = (category: CategoryId) => {
+    const next = filters.category === category ? null : category;
+    update({ category: next });
+    if (next) goToTransactions();
+  };
 
   let content: ReactNode;
   if (isPending) {
@@ -42,17 +65,29 @@ export function CategoryBreakdown({ range }: CategoryBreakdownProps) {
   } else if (data.categories.length === 0) {
     content = <p className={styles.empty}>No spending in this period.</p>;
   } else {
-    content = <CategoryList categories={data.categories} />;
+    content = (
+      <CategoryList
+        categories={data.categories}
+        selected={filters.category}
+        onSelect={toggleCategory}
+      />
+    );
   }
 
   return (
-    <Panel title="Where it went" description="Spending by category">
+    <Panel title="Where it went" description="Select a category to see its transactions">
       {content}
     </Panel>
   );
 }
 
-function CategoryList({ categories }: { categories: BreakdownItem[] }) {
+type CategoryListProps = {
+  categories: BreakdownItem[];
+  selected: CategoryId | null;
+  onSelect: (category: CategoryId) => void;
+};
+
+function CategoryList({ categories, selected, onSelect }: CategoryListProps) {
   const [expanded, setExpanded] = useState(false);
   const listId = useId();
 
@@ -64,7 +99,13 @@ function CategoryList({ categories }: { categories: BreakdownItem[] }) {
     <div className={styles.listWrap}>
       <ol id={listId} className={styles.list}>
         {visible.map((item) => (
-          <CategoryRow key={item.category} item={item} largest={largest} />
+          <CategoryRow
+            key={item.category}
+            item={item}
+            largest={largest}
+            selected={selected === item.category}
+            onSelect={onSelect}
+          />
         ))}
       </ol>
 
@@ -89,32 +130,47 @@ function CategoryList({ categories }: { categories: BreakdownItem[] }) {
   );
 }
 
-function CategoryRow({ item, largest }: { item: BreakdownItem; largest: number }) {
+type CategoryRowProps = {
+  item: BreakdownItem;
+  largest: number;
+  selected: boolean;
+  onSelect: (category: CategoryId) => void;
+};
+
+function CategoryRow({ item, largest, selected, onSelect }: CategoryRowProps) {
   const { label, icon: Icon, color } = CATEGORIES[item.category];
   // Bars are scaled against the largest category so differences are easy to compare
   const barWidth = largest > 0 ? (item.totalCents / largest) * 100 : 0;
 
   return (
-    <li className={styles.row} style={{ '--category-color': color } as CSSProperties}>
-      <span className={styles.icon} aria-hidden="true">
-        <Icon />
-      </span>
-      <div className={styles.details}>
-        <div className={styles.line}>
-          <span className={styles.name}>{label}</span>
-          <Money cents={item.totalCents} className={styles.amount} />
-        </div>
-        <div className={styles.track} aria-hidden="true">
-          <span className={styles.fill} style={{ width: `${barWidth}%` }} />
-        </div>
-        <div className={styles.meta}>
-          <span>{formatPaymentCount(item.transactionCount)}</span>
-          <span>
-            {formatShare(item.percentage)}
-            <span className="visually-hidden"> of spending</span>
+    <li style={{ '--category-color': color } as CSSProperties}>
+      {/* Buttons may only contain inline content, so the layout uses spans */}
+      <button
+        type="button"
+        className={styles.rowButton}
+        aria-pressed={selected}
+        onClick={() => onSelect(item.category)}
+      >
+        <span className={styles.icon} aria-hidden="true">
+          <Icon />
+        </span>
+        <span className={styles.details}>
+          <span className={styles.line}>
+            <span className={styles.name}>{label}</span>
+            <Money cents={item.totalCents} className={styles.amount} />
           </span>
-        </div>
-      </div>
+          <span className={styles.track} aria-hidden="true">
+            <span className={styles.fill} style={{ width: `${barWidth}%` }} />
+          </span>
+          <span className={styles.meta}>
+            <span>{formatPaymentCount(item.transactionCount)}</span>
+            <span>
+              {formatShare(item.percentage)}
+              <span className="visually-hidden"> of spending</span>
+            </span>
+          </span>
+        </span>
+      </button>
     </li>
   );
 }

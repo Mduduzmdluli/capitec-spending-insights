@@ -11,7 +11,7 @@ import { Pagination } from './Pagination';
 import { TransactionFilters } from './TransactionFilters';
 import { TransactionList } from './TransactionList';
 import styles from './Transactions.module.css';
-import { useTransactionFilters } from './useTransactionFilters';
+import { useTransactionFilters, TRANSACTIONS_PANEL_ID } from './useTransactionFilters';
 
 const PAGE_SIZE = 20;
 const SEARCH_DELAY_MS = 300;
@@ -102,7 +102,11 @@ export function Transactions({ range }: TransactionsProps) {
   }
 
   return (
-    <Panel title="Transactions" description={<span aria-live="polite">{summary}</span>}>
+    <Panel
+      id={TRANSACTIONS_PANEL_ID}
+      title="Transactions"
+      description={<span aria-live="polite">{summary}</span>}
+    >
       <div ref={topRef} className={styles.scrollAnchor}>
         <TransactionFilters
           searchText={searchText}

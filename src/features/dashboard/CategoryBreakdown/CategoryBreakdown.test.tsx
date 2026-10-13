@@ -71,7 +71,7 @@ describe('CategoryBreakdown', () => {
     renderWithProviders(<CategoryBreakdown range={range} />);
 
     await screen.findByText('Groceries');
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /more categor/ })).not.toBeInTheDocument();
   });
 
   it('says so when nothing was spent', async () => {
@@ -91,5 +91,25 @@ describe('CategoryBreakdown', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'We couldn’t load your spending by category',
     );
+  });
+});
+
+describe('CategoryBreakdown selection', () => {
+  it('filters transactions by the chosen category, and clears on a second press', async () => {
+    respondWith(sixCategories);
+    const user = userEvent.setup();
+    const { getLocation } = renderWithProviders(<CategoryBreakdown range={range} />);
+    const params = () => new URLSearchParams(getLocation()?.search);
+
+    const groceries = await screen.findByRole('button', { name: /^Groceries/ });
+    expect(groceries).toHaveAttribute('aria-pressed', 'false');
+
+    await user.click(groceries);
+    expect(params().get('category')).toBe('groceries');
+    expect(groceries).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(groceries);
+    expect(params().has('category')).toBe(false);
+    expect(groceries).toHaveAttribute('aria-pressed', 'false');
   });
 });
