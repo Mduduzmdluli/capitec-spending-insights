@@ -92,7 +92,12 @@ export function SpendingTrend({ period, range }: SpendingTrendProps) {
   }
 
   return (
-    <Panel title="Spending over time" description={description} aside={aside}>
+    <Panel
+      className={styles.panel}
+      title="Spending over time"
+      description={description}
+      aside={aside}
+    >
       {content}
     </Panel>
   );

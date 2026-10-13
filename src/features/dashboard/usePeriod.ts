@@ -19,6 +19,8 @@ export function usePeriod() {
           const params = new URLSearchParams(current);
           if (next === DEFAULT_PERIOD) params.delete(PARAM);
           else params.set(PARAM, next);
+          // A new period means a new set of transactions, so start from the first page
+          params.delete('page');
           return params;
         },
         { replace: true },

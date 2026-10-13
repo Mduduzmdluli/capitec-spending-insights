@@ -29,8 +29,15 @@
   color: var(--color-ink-muted);
 }
 
+/* Header takes what it needs; the chart fills the rest when the panel is stretched */
+.panel {
+  grid-template-rows: auto 1fr;
+}
+
 .chart {
-  height: 16rem;
+  height: 100%;
+  min-height: 16rem;
+  max-height: 30rem;
   /* Let the chart use the panel's full width; the y-axis labels supply their own gutter */
   margin-inline: calc(var(--space-2) * -1);
 }
@@ -60,7 +67,8 @@
 }
 
 .loading {
-  height: 16rem;
+  height: 100%;
+  min-height: 16rem;
 }
 
 .chartSkeleton {
@@ -71,6 +79,6 @@
 @media (min-width: 48rem) {
   .chart,
   .loading {
-    height: 18rem;
+    min-height: 18rem;
   }
 }
