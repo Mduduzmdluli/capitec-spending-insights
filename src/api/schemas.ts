@@ -104,3 +104,18 @@ export type TransactionQuery = DateRange & {
   pageSize?: number;
   sort?: TransactionSort;
 };
+
+// ---- Authentication ----
+
+export const loginRequestSchema = z.object({
+  username: z.string().trim().min(1),
+  password: z.string().min(1),
+});
+export type LoginRequest = z.infer<typeof loginRequestSchema>;
+
+export const sessionSchema = z.object({
+  token: z.string().min(1),
+  expiresAt: z.iso.datetime(),
+  customer: customerSchema,
+});
+export type Session = z.infer<typeof sessionSchema>;

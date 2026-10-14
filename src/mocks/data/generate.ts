@@ -8,7 +8,7 @@ import {
   subDays,
 } from 'date-fns';
 import type { Transaction } from '../../api/schemas';
-import { DISCRETIONARY_PROFILES, RECURRING_PAYMENTS, SALARY } from './merchants';
+import { THANDI_SPENDING, type SpendingProfile } from './merchants';
 import { createRng, pick } from './random';
 
 type GenerateOptions = {
@@ -16,6 +16,8 @@ type GenerateOptions = {
   seed?: number;
   endDate?: Date;
   days?: number;
+  /** What this customer spends on. Defaults to the original customer's profile. */
+  spending?: SpendingProfile;
 };
 
 type TransactionDraft = Omit<Transaction, 'id'>;
@@ -30,6 +32,7 @@ export function generateTransactions({
   seed = 42,
   endDate = new Date(),
   days = 365,
+  spending = THANDI_SPENDING,
 }: GenerateOptions = {}): Transaction[] {
   const rng = createRng(seed);
   const end = startOfDay(endDate);
@@ -41,7 +44,7 @@ export function generateTransactions({
   for (let day = start; day.getTime() <= end.getTime(); day = addDays(day, 1)) {
     const weekendDay = isWeekend(day);
 
-    for (const profile of DISCRETIONARY_PROFILES) {
+    for (const profile of spending.discretionary) {
       const chance = (profile.perWeek / 7) * (weekendDay ? profile.weekendMultiplier : 1);
       if (rng() >= chance) continue;
 
@@ -66,7 +69,7 @@ export function generateTransactions({
 
   // Monthly debit orders and salary
   for (const month of eachMonthOfInterval({ start, end })) {
-    for (const payment of RECURRING_PAYMENTS) {
+    for (const payment of spending.recurring) {
       const day = setDate(month, payment.dayOfMonth);
       if (!inRange(day)) continue;
       drafts.push({
@@ -79,13 +82,13 @@ export function generateTransactions({
       });
     }
 
-    const payday = setDate(month, SALARY.dayOfMonth);
+    const payday = setDate(month, spending.salary.dayOfMonth);
     if (inRange(payday)) {
       drafts.push({
         date: timestamp(payday, 5, 0),
-        merchant: SALARY.merchant,
+        merchant: spending.salary.merchant,
         category: 'income',
-        amountCents: SALARY.amountCents,
+        amountCents: spending.salary.amountCents,
         type: 'credit',
         channel: 'eft',
       });
