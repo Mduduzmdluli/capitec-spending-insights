@@ -164,3 +164,50 @@
     white-space: nowrap;
   }
 }
+
+/* Customer details and sign-out, together on the right */
+.accountArea {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.signOut {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-on-header);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  border-radius: var(--radius-sm);
+  transition: background-color 150ms ease;
+}
+
+.signOut:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+.signOutIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (max-width: 40rem) {
+  .signOut {
+    padding: 0 var(--space-2);
+  }
+
+  .signOutLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}

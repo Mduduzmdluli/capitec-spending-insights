@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { sessionSchema } from '../api/schemas';
+import { MDUDUZI, THANDI } from '../test/credentials';
 import { findCustomer, getTransactions } from './db';
 import { resetAllAttempts } from './loginAttempts';
-import { touchSession } from './sessions';
+import { createSession, touchSession } from './sessions';
 
 const apiUrl = (path: string) => new URL(path, window.location.origin);
 
@@ -19,7 +20,7 @@ afterEach(() => {
 
 describe('mock sign-in API', () => {
   it('signs in with valid credentials and creates a session', async () => {
-    const response = await login('thandim', 'Thandi@2026');
+    const response = await login(THANDI.username, THANDI.password);
 
     expect(response.status).toBe(200);
     const session = sessionSchema.parse(await response.json());
@@ -28,13 +29,13 @@ describe('mock sign-in API', () => {
   });
 
   it('ignores the case of the username and surrounding spaces', async () => {
-    const response = await login(' MDLULIM ', 'Mdu@2026');
+    const response = await login(`  ${MDUDUZI.username.toUpperCase()} `, MDUDUZI.password);
     expect(response.status).toBe(200);
   });
 
   it('gives the same response for an unknown username and a wrong password', async () => {
-    const wrongPassword = await login('thandim', 'not-the-password');
-    const unknownUser = await login('nobody', 'Spend@2026');
+    const wrongPassword = await login(THANDI.username, 'not-the-password');
+    const unknownUser = await login('nobody', THANDI.password);
 
     expect(wrongPassword.status).toBe(401);
     expect(unknownUser.status).toBe(401);
@@ -43,10 +44,10 @@ describe('mock sign-in API', () => {
 
   it('locks the username after five failed attempts, even with the right password', async () => {
     for (let attempt = 0; attempt < 5; attempt++) {
-      await login('thandi', 'wrong');
+      await login(THANDI.username, 'wrong');
     }
 
-    const response = await login('thandi', 'Spend@2026');
+    const response = await login(THANDI.username, THANDI.password);
 
     expect(response.status).toBe(429);
     expect((await response.json()).message).toMatch(/Too many unsuccessful attempts/);
@@ -58,7 +59,9 @@ describe('mock sign-in API', () => {
   });
 
   it('ends the session on sign-out', async () => {
-    const { token } = sessionSchema.parse(await (await login('thandim', 'Thandi@2026')).json());
+    const { token } = sessionSchema.parse(
+      await (await login(THANDI.username, THANDI.password)).json(),
+    );
 
     const response = await fetch(apiUrl('/api/auth/logout'), {
       method: 'POST',
@@ -81,5 +84,33 @@ describe('mock customers', () => {
     expect(getTransactions('cust_001')).not.toEqual(getTransactions('cust_002'));
     // Mduduzi has no car
     expect(getTransactions('cust_002').some((t) => t.category === 'fuel')).toBe(false);
+  });
+});
+
+describe('protected customer data', () => {
+  const summaryUrl = (customerId: string) =>
+    apiUrl(`/api/customers/${customerId}/summary?from=2026-01-01&to=2026-01-31`);
+
+  it('requires a session', async () => {
+    const response = await fetch(summaryUrl('cust_001'));
+    expect(response.status).toBe(401);
+  });
+
+  it('rejects an unknown token', async () => {
+    const response = await fetch(summaryUrl('cust_001'), {
+      headers: { Authorization: 'Bearer not-a-real-token' },
+    });
+    expect(response.status).toBe(401);
+  });
+
+  it("refuses another customer's data, even with a valid session", async () => {
+    const { token } = createSession('cust_001');
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const own = await fetch(summaryUrl('cust_001'), { headers });
+    const someoneElses = await fetch(summaryUrl('cust_002'), { headers });
+
+    expect(own.status).toBe(200);
+    expect(someoneElses.status).toBe(403);
   });
 });

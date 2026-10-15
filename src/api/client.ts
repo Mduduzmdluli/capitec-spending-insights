@@ -26,18 +26,27 @@ const BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? '';
 
 type QueryParams = Record<string, string | number | undefined>;
 
-export async function apiGet<TSchema extends z.ZodType>(
-  path: string,
-  schema: TSchema,
-  params: QueryParams = {},
-  signal?: AbortSignal,
-): Promise<z.infer<TSchema>> {
+export type RequestOptions = {
+  /** Sent as "Authorization: Bearer <token>" */
+  token?: string;
+  signal?: AbortSignal;
+};
+
+function buildUrl(path: string, params: QueryParams = {}): URL {
   const url = new URL(`${BASE_URL}${path}`, window.location.origin);
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== '') url.searchParams.set(key, String(value));
   }
+  return url;
+}
 
-  const response = await fetch(url, { signal, headers: { Accept: 'application/json' } });
+/** Sends a request, adding standard headers, and turns error statuses into an ApiError. */
+async function send(url: URL, init: RequestInit, { token, signal }: RequestOptions) {
+  const headers = new Headers(init.headers);
+  headers.set('Accept', 'application/json');
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  const response = await fetch(url, { ...init, headers, signal });
 
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);
@@ -48,9 +57,46 @@ export async function apiGet<TSchema extends z.ZodType>(
     throw new ApiError(response.status, message);
   }
 
+  return response;
+}
+
+/** Checks the response body against the schema before anything uses it. */
+async function parse<TSchema extends z.ZodType>(
+  response: Response,
+  schema: TSchema,
+): Promise<z.infer<TSchema>> {
   const result = schema.safeParse(await response.json());
   if (!result.success) throw new InvalidResponseError(result.error.issues);
   return result.data;
+}
+
+export async function apiGet<TSchema extends z.ZodType>(
+  path: string,
+  schema: TSchema,
+  params: QueryParams = {},
+  options: RequestOptions = {},
+): Promise<z.infer<TSchema>> {
+  const response = await send(buildUrl(path, params), { method: 'GET' }, options);
+  return parse(response, schema);
+}
+
+export async function apiPost<TSchema extends z.ZodType>(
+  path: string,
+  schema: TSchema,
+  body: unknown,
+  options: RequestOptions = {},
+): Promise<z.infer<TSchema>> {
+  const response = await send(
+    buildUrl(path),
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) },
+    options,
+  );
+  return parse(response, schema);
+}
+
+/** For endpoints that reply with no content, such as signing out. */
+export async function apiPostNoContent(path: string, options: RequestOptions = {}): Promise<void> {
+  await send(buildUrl(path), { method: 'POST' }, options);
 }
 
 /** A message that is safe and helpful to show to the customer. */

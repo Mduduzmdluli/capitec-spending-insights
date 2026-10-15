@@ -2,9 +2,9 @@ import { delay, http, HttpResponse } from 'msw';
 import type { z } from 'zod';
 import {
   dateRangeParamsSchema,
+  loginRequestSchema,
   transactionsParamsSchema,
   trendsParamsSchema,
-  loginRequestSchema,
 } from '../api/schemas';
 import {
   computeCategoryBreakdown,
@@ -13,8 +13,8 @@ import {
   queryTransactions,
 } from './data/aggregations';
 import { findCustomer, findUserByUsername, getTransactions } from './db';
-import { clearAttempts, lockoutMinutesRemaining, recordFailedAttempt } from './loginAttempts.ts';
-import { createSession, deleteSession } from './sessions.ts';
+import { clearAttempts, lockoutMinutesRemaining, recordFailedAttempt } from './loginAttempts';
+import { createSession, deleteSession, touchSession } from './sessions';
 
 const CUSTOMER_PATH = '*/api/customers/:customerId';
 const isTest = import.meta.env.MODE === 'test';
@@ -37,18 +37,33 @@ export function bearerToken(request: Request): string | null {
   return header?.startsWith('Bearer ') ? header.slice('Bearer '.length) : null;
 }
 
-async function precheck(customerId: unknown): Promise<Response | undefined> {
+/**
+ * Shared checks for every data endpoint, in order: simulated latency and errors,
+ * then a valid session, then that the session belongs to the customer in the URL.
+ */
+async function precheck(request: Request, customerId: unknown): Promise<Response | undefined> {
   const mode = simulationMode();
 
-  if (import.meta.env.MODE !== 'test') {
+  if (!isTest) {
     await delay(mode === 'slow' ? 3000 : 'real');
   }
   if (mode === 'error') {
     return errorResponse(500, 'Something went wrong on our side. Please try again.');
   }
-  if (typeof customerId !== 'string' || !findCustomer(customerId)) {
-    return errorResponse(404, 'Customer  not found');
+
+  // 401: no token, an unknown token, or an expired session
+  const token = bearerToken(request);
+  const session = token ? touchSession(token) : null;
+  if (!session) {
+    return errorResponse(401, 'Your session has expired. Please sign in again.');
   }
+
+  // 403: whose data you may see comes from the session, never from the URL. The same
+  // answer for any other ID, whether or not it exists, so IDs can't be probed either.
+  if (customerId !== session.customerId) {
+    return errorResponse(403, 'You do not have access to this account.');
+  }
+
   return undefined;
 }
 
@@ -97,17 +112,17 @@ const authHandlers = [
   }),
 ];
 
-// ---- Customer data ----
+// ---- Customer data: every endpoint requires the customer's own session ----
 
 const dataHandlers = [
-  http.get(CUSTOMER_PATH, async ({ params }) => {
-    const failure = await precheck(params.customerId);
+  http.get(CUSTOMER_PATH, async ({ params, request }) => {
+    const failure = await precheck(request, params.customerId);
     if (failure) return failure;
     return HttpResponse.json(findCustomer(String(params.customerId)) ?? null);
   }),
 
   http.get(`${CUSTOMER_PATH}/summary`, async ({ params, request }) => {
-    const failure = await precheck(params.customerId);
+    const failure = await precheck(request, params.customerId);
     if (failure) return failure;
     const query = parseQuery(request, dateRangeParamsSchema);
     if (!query.success) return badRequest('Invalid query parameters');
@@ -118,7 +133,7 @@ const dataHandlers = [
   }),
 
   http.get(`${CUSTOMER_PATH}/spending/trends`, async ({ params, request }) => {
-    const failure = await precheck(params.customerId);
+    const failure = await precheck(request, params.customerId);
     if (failure) return failure;
     const query = parseQuery(request, trendsParamsSchema);
     if (!query.success) return badRequest('Invalid query parameters');
@@ -129,7 +144,7 @@ const dataHandlers = [
   }),
 
   http.get(`${CUSTOMER_PATH}/spending/categories`, async ({ params, request }) => {
-    const failure = await precheck(params.customerId);
+    const failure = await precheck(request, params.customerId);
     if (failure) return failure;
     const query = parseQuery(request, dateRangeParamsSchema);
     if (!query.success) return badRequest('Invalid query parameters');
@@ -140,7 +155,7 @@ const dataHandlers = [
   }),
 
   http.get(`${CUSTOMER_PATH}/transactions`, async ({ params, request }) => {
-    const failure = await precheck(params.customerId);
+    const failure = await precheck(request, params.customerId);
     if (failure) return failure;
     const query = parseQuery(request, transactionsParamsSchema);
     if (!query.success) return badRequest('Invalid query parameters');

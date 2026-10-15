@@ -1,0 +1,236 @@
+.page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--space-8) var(--space-4);
+}
+
+.wrap {
+  display: grid;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 26rem;
+}
+
+.card {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-8) var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+}
+
+.logoTile {
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  height: 2.75rem;
+  padding: 0 var(--space-3);
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.logo {
+  display: block;
+  width: auto;
+  height: 1.75rem;
+}
+
+.heading {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.title {
+  font-size: var(--text-2xl);
+  letter-spacing: -0.015em;
+}
+
+.subtitle {
+  color: var(--color-ink-muted);
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-base);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--color-up);
+}
+
+.passwordWrap {
+  position: relative;
+}
+
+.passwordWrap .input {
+  padding-right: 3rem;
+}
+
+.toggle {
+  position: absolute;
+  top: 50%;
+  right: var(--space-1);
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  transform: translateY(-50%);
+}
+
+.toggle:hover {
+  color: var(--color-ink);
+}
+
+.toggle svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.fieldError {
+  font-size: var(--text-sm);
+  color: var(--color-up);
+}
+
+.alert,
+.notice {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-md);
+}
+
+.alert {
+  color: var(--color-up);
+  background: color-mix(in srgb, var(--color-up) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-up) 35%, transparent);
+}
+
+.notice {
+  color: var(--color-ink);
+  background: var(--color-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.submit {
+  min-height: 2.75rem;
+  margin-top: var(--space-2);
+  font-weight: 600;
+  color: var(--color-on-accent);
+  cursor: pointer;
+  background: var(--color-accent-strong);
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: background-color 150ms ease;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--color-accent);
+}
+
+.submit:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.security {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+}
+
+.securityIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.demo {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--text-sm);
+  background: var(--color-surface-sunken);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.demoTitle {
+  font-size: var(--text-sm);
+}
+
+.demoNote {
+  color: var(--color-ink-muted);
+}
+
+.demoList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.demoItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.demoDetails {
+  display: grid;
+}
+
+.demoName {
+  font-weight: 500;
+}
+
+.demoCredentials {
+  color: var(--color-ink-muted);
+}
+
+.useButton {
+  padding: var(--space-1) var(--space-3);
+  font-weight: 500;
+  color: var(--color-accent);
+  cursor: pointer;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.useButton:hover {
+  background: var(--color-accent-soft);
+}

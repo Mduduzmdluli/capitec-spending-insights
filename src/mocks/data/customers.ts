@@ -22,7 +22,7 @@ export const MOCK_USERS: readonly MockUser[] = [
       lastName: 'Mokoena',
       accountNumberMasked: '•••• 4821',
     },
-    username: 'thandim',
+    username: 'thandi',
     password: 'Thandi@2026',
     seed: 42,
     spending: THANDI_SPENDING,

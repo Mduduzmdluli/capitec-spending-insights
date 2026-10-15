@@ -8,6 +8,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { createQueryClient } from './api/queryClient';
+import { AuthProvider } from './auth/AuthProvider';
 import App from './App';
 
 const queryClient = createQueryClient();
@@ -23,9 +24,11 @@ function renderApp() {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <AuthProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </AuthProvider>
       </QueryClientProvider>
     </StrictMode>,
   );

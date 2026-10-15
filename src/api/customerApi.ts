@@ -8,36 +8,41 @@ import {
 } from './schemas';
 import type { DateRange, TransactionQuery, TrendInterval } from './schemas';
 
+/** Who is asking, and the proof they're allowed to. */
+export type ApiAuth = {
+  token: string;
+  customerId: string;
+};
+
 const customerPath = (customerId: string) => `/api/customers/${encodeURIComponent(customerId)}`;
 
 export const customerApi = {
-  getCustomer: (customerId: string, signal?: AbortSignal) =>
-    apiGet(customerPath(customerId), customerSchema, {}, signal),
+  getCustomer: (auth: ApiAuth, signal?: AbortSignal) =>
+    apiGet(customerPath(auth.customerId), customerSchema, {}, { token: auth.token, signal }),
 
-  getSummary: (customerId: string, range: DateRange, signal?: AbortSignal) =>
-    apiGet(`${customerPath(customerId)}/summary`, spendingSummarySchema, range, signal),
+  getSummary: (auth: ApiAuth, range: DateRange, signal?: AbortSignal) =>
+    apiGet(`${customerPath(auth.customerId)}/summary`, spendingSummarySchema, range, {
+      token: auth.token,
+      signal,
+    }),
 
-  getTrends: (
-    customerId: string,
-    range: DateRange,
-    interval: TrendInterval,
-    signal?: AbortSignal,
-  ) =>
+  getTrends: (auth: ApiAuth, range: DateRange, interval: TrendInterval, signal?: AbortSignal) =>
     apiGet(
-      `${customerPath(customerId)}/spending/trends`,
+      `${customerPath(auth.customerId)}/spending/trends`,
       spendingTrendsSchema,
       { ...range, interval },
-      signal,
+      { token: auth.token, signal },
     ),
 
-  getCategoryBreakdown: (customerId: string, range: DateRange, signal?: AbortSignal) =>
-    apiGet(
-      `${customerPath(customerId)}/spending/categories`,
-      categoryBreakdownSchema,
-      range,
+  getCategoryBreakdown: (auth: ApiAuth, range: DateRange, signal?: AbortSignal) =>
+    apiGet(`${customerPath(auth.customerId)}/spending/categories`, categoryBreakdownSchema, range, {
+      token: auth.token,
       signal,
-    ),
+    }),
 
-  getTransactions: (customerId: string, query: TransactionQuery, signal?: AbortSignal) =>
-    apiGet(`${customerPath(customerId)}/transactions`, transactionPageSchema, query, signal),
+  getTransactions: (auth: ApiAuth, query: TransactionQuery, signal?: AbortSignal) =>
+    apiGet(`${customerPath(auth.customerId)}/transactions`, transactionPageSchema, query, {
+      token: auth.token,
+      signal,
+    }),
 };

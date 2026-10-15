@@ -1,53 +1,61 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { CUSTOMER_ID } from '../config';
+import { useApiAuth } from '../auth/useAuth';
 import { customerApi } from './customerApi';
 import type { DateRange, TransactionQuery, TrendInterval } from './schemas';
 
-const baseKey = ['customer', CUSTOMER_ID] as const;
+/** Every key starts with the customer's ID, so each customer's data is cached separately. */
+const baseKey = (customerId: string) => ['customer', customerId] as const;
 
 export const queryKeys = {
-  all: baseKey,
-  profile: () => [...baseKey, 'profile'] as const,
-  summary: (range: DateRange) => [...baseKey, 'summary', range] as const,
-  trends: (range: DateRange, interval: TrendInterval) =>
-    [...baseKey, 'trends', range, interval] as const,
-  categories: (range: DateRange) => [...baseKey, 'categories', range] as const,
-  transactions: (query: TransactionQuery) => [...baseKey, 'transactions', query] as const,
+  profile: (customerId: string) => [...baseKey(customerId), 'profile'] as const,
+  summary: (customerId: string, range: DateRange) =>
+    [...baseKey(customerId), 'summary', range] as const,
+  trends: (customerId: string, range: DateRange, interval: TrendInterval) =>
+    [...baseKey(customerId), 'trends', range, interval] as const,
+  categories: (customerId: string, range: DateRange) =>
+    [...baseKey(customerId), 'categories', range] as const,
+  transactions: (customerId: string, query: TransactionQuery) =>
+    [...baseKey(customerId), 'transactions', query] as const,
 };
 
 export function useCustomer() {
+  const auth = useApiAuth();
   return useQuery({
-    queryKey: queryKeys.profile(),
-    queryFn: ({ signal }) => customerApi.getCustomer(CUSTOMER_ID, signal),
+    queryKey: queryKeys.profile(auth.customerId),
+    queryFn: ({ signal }) => customerApi.getCustomer(auth, signal),
   });
 }
 
 export function useSpendingSummary(range: DateRange) {
+  const auth = useApiAuth();
   return useQuery({
-    queryKey: queryKeys.summary(range),
-    queryFn: ({ signal }) => customerApi.getSummary(CUSTOMER_ID, range, signal),
+    queryKey: queryKeys.summary(auth.customerId, range),
+    queryFn: ({ signal }) => customerApi.getSummary(auth, range, signal),
   });
 }
 
 export function useSpendingTrends(range: DateRange, interval: TrendInterval) {
+  const auth = useApiAuth();
   return useQuery({
-    queryKey: queryKeys.trends(range, interval),
-    queryFn: ({ signal }) => customerApi.getTrends(CUSTOMER_ID, range, interval, signal),
+    queryKey: queryKeys.trends(auth.customerId, range, interval),
+    queryFn: ({ signal }) => customerApi.getTrends(auth, range, interval, signal),
   });
 }
 
 export function useCategoryBreakdown(range: DateRange) {
+  const auth = useApiAuth();
   return useQuery({
-    queryKey: queryKeys.categories(range),
-    queryFn: ({ signal }) => customerApi.getCategoryBreakdown(CUSTOMER_ID, range, signal),
+    queryKey: queryKeys.categories(auth.customerId, range),
+    queryFn: ({ signal }) => customerApi.getCategoryBreakdown(auth, range, signal),
   });
 }
 
 export function useTransactions(query: TransactionQuery) {
+  const auth = useApiAuth();
   return useQuery({
-    queryKey: queryKeys.transactions(query),
-    queryFn: ({ signal }) => customerApi.getTransactions(CUSTOMER_ID, query, signal),
-    // Keep showing the current page while the next one loads, instead of flashing a spinner
+    queryKey: queryKeys.transactions(auth.customerId, query),
+    queryFn: ({ signal }) => customerApi.getTransactions(auth, query, signal),
+    // Keep showing the current page while the next one loads, instead of flashing a skeleton
     placeholderData: keepPreviousData,
   });
 }
