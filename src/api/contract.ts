@@ -149,3 +149,26 @@ export const transactionsResponseSchema = z.object({
   }),
 });
 export type TransactionsResponse = z.infer<typeof transactionsResponseSchema>;
+
+// ---- 6. Spending goals: GET /api/customers/{customerId}/goals ----
+
+/**
+ * The document shows "on_track" and "warning". It doesn't name a status for spending
+ * past the budget, so "exceeded" is an assumption, noted in the README.
+ */
+export const GOAL_STATUSES = ['on_track', 'warning', 'exceeded'] as const;
+
+export const goalsResponseSchema = z.object({
+  goals: z.array(
+    z.object({
+      id: z.string(),
+      category: z.string(),
+      monthlyBudget: money,
+      currentSpent: money,
+      percentageUsed: z.number(),
+      daysRemaining: count,
+      status: z.enum(GOAL_STATUSES),
+    }),
+  ),
+});
+export type GoalsResponse = z.infer<typeof goalsResponseSchema>;

@@ -2,6 +2,7 @@ import { InvalidResponseError } from './client';
 import { CATEGORY_API_NAMES, categoryIdFromApiName } from './contract';
 import type {
   CategoriesResponse,
+  GoalsResponse,
   ProfileResponse,
   SummaryResponse,
   TransactionsResponse,
@@ -16,6 +17,7 @@ import type {
   Transaction,
   TransactionPage,
   TransactionQuery,
+  Goal,
 } from './schemas';
 
 // ---- Money ----
@@ -112,6 +114,18 @@ export function toTransactionPage(response: TransactionsResponse): TransactionPa
     totalItems: total,
     totalPages: Math.max(1, Math.ceil(total / limit)),
   };
+}
+
+export function toGoals(response: GoalsResponse): Goal[] {
+  return response.goals.map((goal) => ({
+    id: goal.id,
+    category: requireCategory(goal.category),
+    budgetCents: toCents(goal.monthlyBudget),
+    spentCents: toCents(goal.currentSpent),
+    percentUsed: goal.percentageUsed,
+    daysRemaining: goal.daysRemaining,
+    status: goal.status,
+  }));
 }
 
 // ---- Requests ----

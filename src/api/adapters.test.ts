@@ -4,6 +4,7 @@ import {
   toCents,
   toChannel,
   toCustomer,
+  toGoals,
   toSpendingSummary,
   toSpendingTrends,
   toTransactionPage,
@@ -213,5 +214,35 @@ describe('toTransactionsParams', () => {
       limit: 20,
       sortBy: 'date_desc',
     });
+  });
+});
+
+describe('toGoals', () => {
+  it('maps the documented example', () => {
+    expect(
+      toGoals({
+        goals: [
+          {
+            id: 'goal_001',
+            category: 'Entertainment',
+            monthlyBudget: 1000,
+            currentSpent: 650.3,
+            percentageUsed: 65.03,
+            daysRemaining: 12,
+            status: 'on_track',
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        id: 'goal_001',
+        category: 'entertainment',
+        budgetCents: 100000,
+        spentCents: 65030,
+        percentUsed: 65.03,
+        daysRemaining: 12,
+        status: 'on_track',
+      },
+    ]);
   });
 });
