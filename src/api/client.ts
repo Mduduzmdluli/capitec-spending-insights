@@ -13,9 +13,9 @@ export class ApiError extends Error {
 
 /** The server responded, but the data didn't match the expected shape. */
 export class InvalidResponseError extends Error {
-  readonly issues: z.core.$ZodIssue[];
+  readonly issues: readonly unknown[];
 
-  constructor(issues: z.core.$ZodIssue[]) {
+  constructor(issues: readonly unknown[] = []) {
     super('Received an unexpected response from the server');
     this.name = 'InvalidResponseError';
     this.issues = issues;

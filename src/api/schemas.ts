@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+/**
+ * The app's own data model, used throughout the UI. API responses arrive in the shape
+ * described in contract.ts and are translated into these types by adapters.ts.
+ */
+
 export const CATEGORY_IDS = [
   'groceries',
   'dining',
@@ -21,81 +26,63 @@ export const transactionSchema = z.object({
   date: z.iso.datetime(),
   merchant: z.string(),
   category: categoryIdSchema,
-  /** Always positive; direction is given by `type`. Stored in cents to avoid floating-point errors. */
+  /** Always positive; direction is given by `type`. Whole cents avoid floating-point errors. */
   amountCents: z.number().int().nonnegative(),
   type: z.enum(['debit', 'credit']),
   channel: z.enum(['card', 'eft', 'debit_order']),
+  description: z.string().optional(),
 });
 export type Transaction = z.infer<typeof transactionSchema>;
 
-export const customerSchema = z.object({
-  id: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
-  accountNumberMasked: z.string(),
-});
-export type Customer = z.infer<typeof customerSchema>;
+export type Customer = {
+  id: string;
+  name: string;
+  email: string;
+  joinDate: string;
+  accountType: string;
+  totalSpentCents: number;
+  currency: string;
+};
 
-export const spendingSummarySchema = z.object({
-  from: z.iso.date(),
-  to: z.iso.date(),
-  totalSpentCents: z.number().int(),
-  previousPeriodSpentCents: z.number().int(),
-  transactionCount: z.number().int(),
-  averageTransactionCents: z.number().int(),
-  topCategory: categoryIdSchema.nullable(),
-});
-export type SpendingSummary = z.infer<typeof spendingSummarySchema>;
+export type SpendingSummary = {
+  totalSpentCents: number;
+  transactionCount: number;
+  averageTransactionCents: number;
+  topCategory: CategoryId | null;
+  /** Percentage change against the previous period, or null if there's nothing to compare */
+  spentChangePercent: number | null;
+  transactionChangePercent: number | null;
+};
 
 export const trendIntervalSchema = z.enum(['day', 'week', 'month']);
 export type TrendInterval = z.infer<typeof trendIntervalSchema>;
 
-export const spendingTrendsSchema = z.object({
-  interval: trendIntervalSchema,
-  points: z.array(z.object({ periodStart: z.iso.date(), totalCents: z.number().int() })),
-});
-export type SpendingTrends = z.infer<typeof spendingTrendsSchema>;
+export type SpendingTrends = {
+  interval: TrendInterval;
+  points: { periodStart: string; totalCents: number }[];
+};
 
-export const categoryBreakdownSchema = z.object({
-  categories: z.array(
-    z.object({
-      category: categoryIdSchema,
-      totalCents: z.number().int(),
-      transactionCount: z.number().int(),
-      percentage: z.number(),
-    }),
-  ),
-});
-export type CategoryBreakdown = z.infer<typeof categoryBreakdownSchema>;
+export type CategoryBreakdown = {
+  categories: {
+    category: CategoryId;
+    totalCents: number;
+    transactionCount: number;
+    percentage: number;
+  }[];
+};
 
 export const transactionSortSchema = z.enum(['date_desc', 'date_asc', 'amount_desc', 'amount_asc']);
 export type TransactionSort = z.infer<typeof transactionSortSchema>;
 
-export const transactionPageSchema = z.object({
-  items: z.array(transactionSchema),
-  page: z.number().int(),
-  pageSize: z.number().int(),
-  totalItems: z.number().int(),
-  totalPages: z.number().int(),
-});
-export type TransactionPage = z.infer<typeof transactionPageSchema>;
+export type TransactionPage = {
+  items: Transaction[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
 
-// ---- Request parameters (validated by the mock server) ----
-
-export const dateRangeParamsSchema = z.object({ from: z.iso.date(), to: z.iso.date() });
-export type DateRange = z.infer<typeof dateRangeParamsSchema>;
-
-export const trendsParamsSchema = dateRangeParamsSchema.extend({
-  interval: trendIntervalSchema.default('day'),
-});
-
-export const transactionsParamsSchema = dateRangeParamsSchema.extend({
-  category: categoryIdSchema.optional(),
-  q: z.string().trim().max(100).optional(),
-  page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(20),
-  sort: transactionSortSchema.default('date_desc'),
-});
+export type DateRange = { from: string; to: string };
 
 export type TransactionQuery = DateRange & {
   category?: CategoryId;
@@ -105,7 +92,7 @@ export type TransactionQuery = DateRange & {
   sort?: TransactionSort;
 };
 
-// ---- Authentication ----
+// ---- Authentication (an addition beyond the documented API) ----
 
 export const loginRequestSchema = z.object({
   username: z.string().trim().min(1),
@@ -116,6 +103,7 @@ export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export const sessionSchema = z.object({
   token: z.string().min(1),
   expiresAt: z.iso.datetime(),
-  customer: customerSchema,
+  /** Who is signed in; their full profile comes from the profile endpoint */
+  customer: z.object({ id: z.string(), name: z.string() }),
 });
 export type Session = z.infer<typeof sessionSchema>;
