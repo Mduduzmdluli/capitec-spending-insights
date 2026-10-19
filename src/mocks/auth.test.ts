@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { sessionSchema } from '../api/schemas';
 import { MDUDUZI, THANDI } from '../test/credentials';
-import { findCustomer, getTransactions } from './db';
+import { findUser, getTransactions } from './db';
 import { resetAllAttempts } from './loginAttempts';
 import { createSession, touchSession } from './sessions';
 
@@ -73,23 +73,21 @@ describe('mock sign-in API', () => {
   });
 });
 
-describe('mock customers', () => {
-  it('has two customers, and nothing for unknown IDs', () => {
-    expect(findCustomer('cust_001')?.firstName).toBe('Thandi');
-    expect(findCustomer('cust_002')?.firstName).toBe('Mduduzi');
-    expect(findCustomer('cust_999')).toBeUndefined();
-  });
+it('has two customers, and nothing for unknown IDs', () => {
+  expect(findUser('cust_001')?.name).toBe('Thandi Mokoena');
+  expect(findUser('cust_002')?.name).toBe('Mduduzi Mdluli');
+  expect(findUser('cust_999')).toBeUndefined();
+});
 
-  it('gives each customer their own spending', () => {
-    expect(getTransactions('cust_001')).not.toEqual(getTransactions('cust_002'));
-    // Mduduzi has no car
-    expect(getTransactions('cust_002').some((t) => t.category === 'fuel')).toBe(false);
-  });
+it('gives each customer their own spending', () => {
+  expect(getTransactions('cust_001')).not.toEqual(getTransactions('cust_002'));
+  // Mduduzi has no car
+  expect(getTransactions('cust_002').some((t) => t.category === 'fuel')).toBe(false);
 });
 
 describe('protected customer data', () => {
   const summaryUrl = (customerId: string) =>
-    apiUrl(`/api/customers/${customerId}/summary?from=2026-01-01&to=2026-01-31`);
+    apiUrl(`/api/customers/${customerId}/spending/summary?period=30d`);
 
   it('requires a session', async () => {
     const response = await fetch(summaryUrl('cust_001'));

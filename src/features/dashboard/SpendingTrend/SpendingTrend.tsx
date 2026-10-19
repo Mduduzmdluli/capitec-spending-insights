@@ -12,14 +12,13 @@ import {
 } from 'recharts';
 import { getErrorMessage } from '../../../api/client';
 import { useSpendingTrends } from '../../../api/hooks';
-import type { DateRange, TrendInterval } from '../../../api/schemas';
+import type { TrendInterval } from '../../../api/schemas';
 import { ErrorState } from '../../../components/ErrorState/ErrorState';
 import { Money } from '../../../components/Money';
 import { Panel } from '../../../components/Panel/Panel';
 import { Skeleton } from '../../../components/Skeleton/Skeleton';
 import { formatCompactRand } from '../../../lib/formatCurrency';
-import { getPeriodInterval } from '../../../lib/period';
-import type { Period } from '../../../lib/period';
+
 import styles from './SpendingTrend.module.css';
 import { formatPeriodLong, formatTick, INTERVAL_TEXT, summariseTrend } from './trendFormat';
 import type { TrendPoint } from './trendFormat';
@@ -30,18 +29,14 @@ const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
-type SpendingTrendProps = {
-  period: Period;
-  range: DateRange;
-};
+/** The documented trends endpoint works in calendar months: 12 by default, up to 24. */
+const MONTHS = 12;
 
-export function SpendingTrend({ period, range }: SpendingTrendProps) {
-  const interval = getPeriodInterval(period);
-  const { data, error, isPending, isError, isFetching, refetch } = useSpendingTrends(
-    range,
-    interval,
-  );
-  const { description, noun } = INTERVAL_TEXT[interval];
+export function SpendingTrend() {
+  const interval: TrendInterval = 'month';
+  const { data, error, isPending, isError, isFetching, refetch } = useSpendingTrends(MONTHS);
+  const { noun } = INTERVAL_TEXT[interval];
+  const description = `Monthly totals for the last ${MONTHS} months`;
 
   let content: ReactNode;
   let aside: ReactNode = null;

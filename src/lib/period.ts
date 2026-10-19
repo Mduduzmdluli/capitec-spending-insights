@@ -5,7 +5,7 @@ export const PERIODS = [
   { id: '7d', label: '7 days', interval: 'day' },
   { id: '30d', label: '30 days', interval: 'day' },
   { id: '90d', label: '90 days', interval: 'week' },
-  { id: '12m', label: '12 months', interval: 'month' },
+  { id: '1y', label: '12 months', interval: 'month' },
 ] as const satisfies readonly { id: string; label: string; interval: TrendInterval }[];
 
 export type Period = (typeof PERIODS)[number]['id'];
@@ -32,7 +32,7 @@ export function getDateRange(period: Period, today: Date = new Date()): DateRang
       return { from: toDateKey(subDays(today, 29)), to };
     case '90d':
       return { from: toDateKey(subDays(today, 89)), to };
-    case '12m':
+    case '1y':
       // Whole calendar months, so the monthly chart has no partial first month
       return { from: toDateKey(startOfMonth(subMonths(today, 11))), to };
   }

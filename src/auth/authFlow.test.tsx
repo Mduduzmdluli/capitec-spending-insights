@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import App from '../App';
 import { resetAllAttempts } from '../mocks/loginAttempts';
 import { server } from '../mocks/server';
+import { MDUDUZI, THANDI } from '../test/credentials';
 import { renderWithProviders } from '../test/render';
 
 type User = ReturnType<typeof userEvent.setup>;
@@ -31,10 +32,10 @@ describe('signing in', () => {
     const user = userEvent.setup();
     renderWithProviders(<App />, { signedInAs: null, route: '/?period=90d' });
 
-    await signIn(user, 'thandi', 'Thandi@2026');
+    await signIn(user, THANDI.username, THANDI.password);
 
     // Stage 1: signed in, because the header shows Thandi's account
-    expect(await screen.findByText('Account ending in 4821')).toBeInTheDocument();
+    expect(await screen.findByText('Premium account')).toBeInTheDocument();
     // Stage 2: returned to the requested view
     expect(screen.getByRole('radio', { name: '90 days' })).toBeChecked();
     // Stage 3: the dashboard's data has loaded
@@ -45,10 +46,10 @@ describe('signing in', () => {
     const user = userEvent.setup();
     renderWithProviders(<App />, { signedInAs: null });
 
-    await signIn(user, 'mdlulim', 'Mdu@2026');
+    await signIn(user, MDUDUZI.username, MDUDUZI.password);
 
     // Wait for the dashboard: the name alone also appears in the sign-in page's demo list
-    expect(await screen.findByText('Account ending in 7310')).toBeInTheDocument();
+    expect(await screen.findByText('Standard account')).toBeInTheDocument();
     expect(screen.getByText('Mduduzi Mdluli')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Sign in' })).not.toBeInTheDocument();
   });
@@ -57,13 +58,13 @@ describe('signing in', () => {
     const user = userEvent.setup();
     renderWithProviders(<App />, { signedInAs: null });
 
-    await signIn(user, 'thandi', 'wrong-password');
+    await signIn(user, THANDI.username, 'wrong-password');
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'The username or password is incorrect.',
     );
     expect(screen.getByLabelText('Password')).toHaveValue('');
-    expect(screen.getByLabelText('Username')).toHaveValue('thandi');
+    expect(screen.getByLabelText('Username')).toHaveValue(THANDI.username);
   });
 
   it('checks for missing details before sending anything', async () => {
@@ -105,7 +106,7 @@ describe('signing out', () => {
 
   it('signs out and explains why when the session has expired', async () => {
     server.use(
-      http.get('*/api/customers/:customerId/summary', () =>
+      http.get('*/api/customers/:customerId/spending/summary', () =>
         HttpResponse.json({ message: 'Your session has expired.' }, { status: 401 }),
       ),
     );

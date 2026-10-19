@@ -9,6 +9,7 @@ import {
   startOfMonth,
   startOfWeek,
   subDays,
+  subMonths,
 } from 'date-fns';
 import type {
   CategoryId,
@@ -159,4 +160,55 @@ export function queryTransactions(transactions: Transaction[], filters: Transact
     totalItems,
     totalPages,
   };
+}
+
+/** Spending per calendar month for the last `months` months, including the current one. */
+export function computeMonthlyTrends(
+  transactions: Transaction[],
+  months: number,
+  today: Date = new Date(),
+) {
+  const start = startOfMonth(subMonths(today, months - 1));
+  const buckets = new Map(
+    eachMonthOfInterval({ start, end: today }).map((month) => [
+      format(month, 'yyyy-MM'),
+      { totalCents: 0, transactionCount: 0 },
+    ]),
+  );
+
+  for (const t of transactions) {
+    if (!isSpending(t)) continue;
+    const bucket = buckets.get(format(parseISO(t.date), 'yyyy-MM'));
+    if (bucket) {
+      bucket.totalCents += t.amountCents;
+      bucket.transactionCount += 1;
+    }
+  }
+
+  return [...buckets].map(([month, bucket]) => ({ month, ...bucket }));
+}
+
+export type TransactionListOptions = {
+  range?: DateRange;
+  category?: CategoryId;
+  search?: string;
+  sort: TransactionSort;
+  offset: number;
+  limit: number;
+};
+
+/** Spending transactions, filtered and sorted, returned as a slice from `offset`. */
+export function listTransactions(
+  transactions: Transaction[],
+  { range, category, search, sort, offset, limit }: TransactionListOptions,
+) {
+  const term = search?.trim().toLowerCase();
+
+  const matches = (range ? filterByRange(transactions, range) : transactions)
+    .filter(isSpending)
+    .filter((t) => !category || t.category === category)
+    .filter((t) => !term || t.merchant.toLowerCase().includes(term))
+    .sort(comparators[sort]);
+
+  return { items: matches.slice(offset, offset + limit), total: matches.length };
 }

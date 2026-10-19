@@ -17,7 +17,7 @@ const SIGN_OUT_MESSAGES: Record<SignOutReason, string> = {
 /** Only shown while the mock API is in use, so reviewers can try both customers. */
 const showDemoAccounts = import.meta.env.VITE_ENABLE_MOCKS !== 'false';
 const DEMO_ACCOUNTS = MOCK_USERS.map((user) => ({
-  name: `${user.customer.firstName} ${user.customer.lastName}`,
+  name: user.name,
   username: user.username,
   password: user.password,
 }));

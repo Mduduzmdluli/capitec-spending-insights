@@ -30,7 +30,7 @@ describe('DashboardPage period selector', () => {
 
     expect(screen.getByRole('radio', { name: '12 months' })).toBeChecked();
     const params = searchParams(getLocation()?.search);
-    expect(params.get('period')).toBe('12m');
+    expect(params.get('period')).toBe('1y');
     expect(params.get('simulate')).toBe('slow');
   });
 

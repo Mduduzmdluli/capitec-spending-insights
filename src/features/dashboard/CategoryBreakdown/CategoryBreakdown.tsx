@@ -3,11 +3,8 @@ import { useId, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { getErrorMessage } from '../../../api/client';
 import { useCategoryBreakdown } from '../../../api/hooks';
-import type {
-  CategoryBreakdown as BreakdownData,
-  CategoryId,
-  DateRange,
-} from '../../../api/schemas';
+import type { CategoryBreakdown as BreakdownData, CategoryId } from '../../../api/schemas';
+import type { Period } from '../../../lib/period';
 import { ErrorState } from '../../../components/ErrorState/ErrorState';
 import { Money } from '../../../components/Money';
 import { Panel } from '../../../components/Panel/Panel';
@@ -37,11 +34,11 @@ function goToTransactions() {
 }
 
 type CategoryBreakdownProps = {
-  range: DateRange;
+  period: Period;
 };
 
-export function CategoryBreakdown({ range }: CategoryBreakdownProps) {
-  const { data, error, isPending, isError, isFetching, refetch } = useCategoryBreakdown(range);
+export function CategoryBreakdown({ period }: CategoryBreakdownProps) {
+  const { data, error, isPending, isError, isFetching, refetch } = useCategoryBreakdown(period);
   const { filters, update } = useTransactionFilters();
 
   const toggleCategory = (category: CategoryId) => {
