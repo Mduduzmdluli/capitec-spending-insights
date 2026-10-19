@@ -3,6 +3,7 @@ import {
   eachDayOfInterval,
   eachMonthOfInterval,
   eachWeekOfInterval,
+  endOfMonth,
   format,
   parseISO,
   startOfDay,
@@ -14,6 +15,7 @@ import {
 import type {
   CategoryId,
   DateRange,
+  GoalStatus,
   Transaction,
   TransactionSort,
   TrendInterval,
@@ -211,4 +213,42 @@ export function listTransactions(
     .sort(comparators[sort]);
 
   return { items: matches.slice(offset, offset + limit), total: matches.length };
+}
+
+export type GoalDefinition = {
+  id: string;
+  category: CategoryId;
+  monthlyBudgetCents: number;
+};
+
+/** Over budget at 100% or more; close to the limit from 80%. */
+const WARNING_THRESHOLD = 80;
+
+/** Each goal's spending so far this calendar month, and how it's tracking. */
+export function computeGoalProgress(
+  transactions: Transaction[],
+  goals: readonly GoalDefinition[],
+  today: Date = new Date(),
+) {
+  const monthToDate = { from: toDateKey(startOfMonth(today)), to: toDateKey(today) };
+  const spentByCategory = totalsByCategory(
+    filterByRange(transactions, monthToDate).filter(isSpending),
+  );
+  const daysRemaining = differenceInCalendarDays(endOfMonth(today), today);
+
+  return goals.map((goal) => {
+    const spentCents = spentByCategory.get(goal.category)?.totalCents ?? 0;
+    const percentageUsed =
+      goal.monthlyBudgetCents > 0
+        ? Math.round((spentCents / goal.monthlyBudgetCents) * 10000) / 100
+        : 0;
+    const status: GoalStatus =
+      percentageUsed >= 100
+        ? 'exceeded'
+        : percentageUsed >= WARNING_THRESHOLD
+          ? 'warning'
+          : 'on_track';
+
+    return { ...goal, spentCents, percentageUsed, daysRemaining, status };
+  });
 }

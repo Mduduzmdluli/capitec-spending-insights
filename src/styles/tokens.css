@@ -18,6 +18,7 @@
   --color-on-accent: #ffffff;
   --color-up: #b42318; /* spent more: deeper than the brand red */
   --color-down: #1e7b4f; /* spent less */
+  --color-warn: #9a6700; /* close to a limit: 5:1 on white */
   --color-header: var(--color-brand-navy);
   --color-on-header: #ffffff;
   --color-on-header-muted: #b0c6d2;
@@ -75,6 +76,7 @@
     --color-on-accent: #0a1824;
     --color-up: #ff7a70;
     --color-down: #4cc38a;
+    --color-warn: #e3b341;
     --color-header: #002a45;
     --color-on-header: #e6eef4;
     --color-on-header-muted: #9db2c4;

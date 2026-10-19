@@ -92,6 +92,19 @@ export type TransactionQuery = DateRange & {
   sort?: TransactionSort;
 };
 
+export type GoalStatus = 'on_track' | 'warning' | 'exceeded';
+
+export type Goal = {
+  id: string;
+  category: CategoryId;
+  budgetCents: number;
+  spentCents: number;
+  /** Percentage of the budget used; can be over 100 */
+  percentUsed: number;
+  daysRemaining: number;
+  status: GoalStatus;
+};
+
 // ---- Authentication (an addition beyond the documented API) ----
 
 export const loginRequestSchema = z.object({

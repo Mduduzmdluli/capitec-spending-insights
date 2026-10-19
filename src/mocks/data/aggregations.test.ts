@@ -8,6 +8,7 @@ import {
   listTransactions,
   previousRange,
   queryTransactions,
+  computeGoalProgress,
 } from './aggregations';
 
 let nextId = 1;
@@ -173,5 +174,27 @@ describe('listTransactions', () => {
     ).toBe(3);
     expect(listTransactions(transactions, { ...options, category: 'dining' }).total).toBe(1);
     expect(listTransactions(transactions, { ...options, search: 'woolworths' }).total).toBe(1);
+  });
+});
+
+describe('computeGoalProgress', () => {
+  const today = new Date(2026, 2, 20); // 20 March 2026
+  const goals = [
+    { id: 'g1', category: 'groceries' as const, monthlyBudgetCents: 25000 },
+    { id: 'g2', category: 'dining' as const, monthlyBudgetCents: 6000 },
+    { id: 'g3', category: 'transport' as const, monthlyBudgetCents: 10000 },
+  ];
+
+  it('measures this month’s spending against each budget', () => {
+    const [groceries, dining, transport] = computeGoalProgress(transactions, goals, today);
+
+    expect(groceries).toMatchObject({ spentCents: 30000, percentageUsed: 120, status: 'exceeded' });
+    expect(dining).toMatchObject({ spentCents: 5000, percentageUsed: 83.33, status: 'warning' });
+    expect(transport).toMatchObject({ spentCents: 0, percentageUsed: 0, status: 'on_track' });
+  });
+
+  it('counts the days left in the month', () => {
+    const [goal] = computeGoalProgress(transactions, goals, today);
+    expect(goal.daysRemaining).toBe(11);
   });
 });

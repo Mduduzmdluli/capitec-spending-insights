@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   categoriesResponseSchema,
+  goalsResponseSchema,
   profileResponseSchema,
   summaryResponseSchema,
   transactionsResponseSchema,
@@ -91,5 +92,14 @@ describe('the documented API contract', () => {
   it('5. rejects an unknown category and a limit over 100', async () => {
     expect((await request('/transactions?category=Gambling')).status).toBe(400);
     expect((await request('/transactions?limit=101')).status).toBe(400);
+  });
+
+  it('6. serves spending goals', async () => {
+    const { goals } = goalsResponseSchema.parse(await getJson('/goals'));
+
+    expect(goals.length).toBeGreaterThan(0);
+    for (const goal of goals) {
+      expect(goal.percentageUsed).toBeCloseTo((goal.currentSpent / goal.monthlyBudget) * 100, 1);
+    }
   });
 });

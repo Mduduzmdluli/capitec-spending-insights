@@ -6,6 +6,7 @@ import { PeriodSelector } from './PeriodSelector/PeriodSelector';
 import { SpendingSummary } from './SpendingSummary/SpendingSummary';
 import { SpendingTrend } from './SpendingTrend/SpendingTrend';
 import { Transactions } from './Transactions/Transactions';
+import { BudgetGoals } from './BudgetGoals/BudgetGoals.tsx';
 import { usePeriod } from './usePeriod';
 
 export function DashboardPage() {
@@ -30,6 +31,7 @@ export function DashboardPage() {
         <SpendingTrend />
         <CategoryBreakdown period={period} />
       </div>
+      <BudgetGoals />
 
       <Transactions range={range} />
     </div>
