@@ -12,8 +12,8 @@ describe('getDateRange', () => {
     expect(getDateRange(period, today)).toEqual({ from, to: '2026-10-08' });
   });
 
-  it('covers 12 whole calendar months for 12m', () => {
-    expect(getDateRange('12m', today)).toEqual({ from: '2025-11-01', to: '2026-10-08' });
+  it('covers 12 whole calendar months for 1y', () => {
+    expect(getDateRange('1y', today)).toEqual({ from: '2025-11-01', to: '2026-10-08' });
   });
 });
 
@@ -32,7 +32,7 @@ describe('getPeriodInterval', () => {
   it('groups longer periods into larger intervals', () => {
     expect(getPeriodInterval('7d')).toBe('day');
     expect(getPeriodInterval('90d')).toBe('week');
-    expect(getPeriodInterval('12m')).toBe('month');
+    expect(getPeriodInterval('1y')).toBe('month');
   });
 });
 
