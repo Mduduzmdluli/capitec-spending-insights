@@ -17,6 +17,7 @@ export const queryKeys = {
     [...baseKey(customerId), 'trends', months] as const,
   transactions: (customerId: string, query: TransactionQuery) =>
     [...baseKey(customerId), 'transactions', query] as const,
+  goals: (customerId: string) => [...baseKey(customerId), 'goals'] as const,
 };
 
 export function useCustomer() {
@@ -58,5 +59,13 @@ export function useTransactions(query: TransactionQuery) {
     queryFn: ({ signal }) => customerApi.getTransactions(auth, query, signal),
     // Keep showing the current page while the next one loads, instead of flashing a skeleton
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useGoals() {
+  const auth = useApiAuth();
+  return useQuery({
+    queryKey: queryKeys.goals(auth.customerId),
+    queryFn: ({ signal }) => customerApi.getGoals(auth, signal),
   });
 }

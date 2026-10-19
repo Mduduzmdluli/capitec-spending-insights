@@ -14,6 +14,7 @@ import { loginRequestSchema } from '../api/schemas';
 import { getDateRange } from '../lib/period';
 import {
   computeCategoryBreakdown,
+  computeGoalProgress,
   computeMonthlyTrends,
   computeSummary,
   listTransactions,
@@ -293,6 +294,30 @@ const dataHandlers = [
     return HttpResponse.json({
       transactions: items.map(toApiTransaction),
       pagination: { total, limit, offset, hasMore: offset + items.length < total },
+    });
+  }),
+
+  // 6. Spending goals, for the current calendar month
+  http.get(`${CUSTOMER_PATH}/goals`, async ({ params, request }) => {
+    const failure = await precheck(request, params.customerId);
+    if (failure) return failure;
+
+    const customerId = String(params.customerId);
+    const goals = computeGoalProgress(
+      getTransactions(customerId),
+      findUser(customerId)?.goals ?? [],
+    );
+
+    return HttpResponse.json({
+      goals: goals.map((goal) => ({
+        id: goal.id,
+        category: CATEGORY_API_NAMES[goal.category],
+        monthlyBudget: toRand(goal.monthlyBudgetCents),
+        currentSpent: toRand(goal.spentCents),
+        percentageUsed: goal.percentageUsed,
+        daysRemaining: goal.daysRemaining,
+        status: goal.status,
+      })),
     });
   }),
 ];

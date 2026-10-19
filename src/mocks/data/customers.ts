@@ -1,5 +1,6 @@
 import { MDUDUZI_SPENDING, THANDI_SPENDING } from './merchants';
 import type { SpendingProfile } from './merchants';
+import type { GoalDefinition } from './aggregations';
 
 /** A customer as the mock server stores them: their profile, sign-in details and spending. */
 export type MockUser = {
@@ -16,6 +17,8 @@ export type MockUser = {
   password: string;
   seed: number;
   spending: SpendingProfile;
+  /** Monthly budgets the customer has set */
+  goals: readonly GoalDefinition[];
 };
 
 export const MOCK_USERS: readonly MockUser[] = [
@@ -29,6 +32,12 @@ export const MOCK_USERS: readonly MockUser[] = [
     password: 'Thandi@2026',
     seed: 42,
     spending: THANDI_SPENDING,
+    goals: [
+      { id: 'goal_001', category: 'groceries', monthlyBudgetCents: 500000 },
+      { id: 'goal_002', category: 'dining', monthlyBudgetCents: 200000 },
+      { id: 'goal_003', category: 'shopping', monthlyBudgetCents: 250000 },
+      { id: 'goal_004', category: 'entertainment', monthlyBudgetCents: 150000 },
+    ],
   },
   {
     id: 'cust_002',
@@ -40,5 +49,10 @@ export const MOCK_USERS: readonly MockUser[] = [
     password: 'Mdu@2026',
     seed: 7,
     spending: MDUDUZI_SPENDING,
+    goals: [
+      { id: 'goal_101', category: 'dining', monthlyBudgetCents: 180000 },
+      { id: 'goal_102', category: 'transport', monthlyBudgetCents: 150000 },
+      { id: 'goal_103', category: 'entertainment', monthlyBudgetCents: 90000 },
+    ],
   },
 ];
