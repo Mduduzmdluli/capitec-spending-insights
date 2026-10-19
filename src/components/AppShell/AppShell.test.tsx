@@ -16,14 +16,14 @@ describe('AppShell', () => {
     renderShell(); // signed in as cust_001, the default
 
     expect(await screen.findByText('Thandi Mokoena')).toBeInTheDocument();
-    expect(screen.getByText('Account ending in 4821')).toBeInTheDocument();
+    expect(screen.getByText('Premium account')).toBeInTheDocument();
   });
 
   it('shows whichever customer is signed in', async () => {
     renderShell('cust_002');
 
     expect(await screen.findByText('Mduduzi Mdluli')).toBeInTheDocument();
-    expect(screen.getByText('Account ending in 7310')).toBeInTheDocument();
+    expect(screen.getByText('Standard account')).toBeInTheDocument();
   });
 
   it('renders page content inside the main landmark', () => {

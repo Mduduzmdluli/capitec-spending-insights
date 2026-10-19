@@ -3,7 +3,7 @@ import { useId } from 'react';
 import type { ReactNode } from 'react';
 import { getErrorMessage } from '../../../api/client';
 import { useSpendingSummary } from '../../../api/hooks';
-import type { DateRange, SpendingSummary as SummaryData } from '../../../api/schemas';
+import type { SpendingSummary as SummaryData } from '../../../api/schemas';
 import { ErrorState } from '../../../components/ErrorState/ErrorState';
 import { Money } from '../../../components/Money';
 import { Skeleton } from '../../../components/Skeleton/Skeleton';
@@ -18,12 +18,11 @@ const countFormatter = new Intl.NumberFormat('en-ZA');
 
 type SpendingSummaryProps = {
   period: Period;
-  range: DateRange;
 };
 
-export function SpendingSummary({ period, range }: SpendingSummaryProps) {
+export function SpendingSummary({ period }: SpendingSummaryProps) {
   const headingId = useId();
-  const { data, error, isPending, isError, isFetching, refetch } = useSpendingSummary(range);
+  const { data, error, isPending, isError, isFetching, refetch } = useSpendingSummary(period);
   const label = getPeriodLabel(period);
 
   let content: ReactNode;
@@ -54,7 +53,7 @@ export function SpendingSummary({ period, range }: SpendingSummaryProps) {
 
 function SummaryContent({ summary, label }: { summary: SummaryData; label: string }) {
   const hasSpending = summary.transactionCount > 0;
-  const change = describeChange(summary.totalSpentCents, summary.previousPeriodSpentCents);
+  const change = describeChange(summary.spentChangePercent);
 
   return (
     <>

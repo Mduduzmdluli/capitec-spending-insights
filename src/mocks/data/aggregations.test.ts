@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { Transaction } from '../../api/schemas';
 import {
   computeCategoryBreakdown,
+  computeMonthlyTrends,
   computeSummary,
   computeTrends,
+  listTransactions,
   previousRange,
   queryTransactions,
 } from './aggregations';
@@ -127,5 +129,49 @@ describe('queryTransactions', () => {
   it('sorts by amount', () => {
     const result = queryTransactions(transactions, { ...defaults, sort: 'amount_asc' });
     expect(result.items.map((t) => t.amountCents)).toEqual([5000, 10000, 20000, 3250000]);
+  });
+});
+
+describe('computeMonthlyTrends', () => {
+  it('totals spending per calendar month, excluding income', () => {
+    const trends = computeMonthlyTrends(transactions, 3, new Date(2026, 3, 15));
+
+    expect(trends).toEqual([
+      { month: '2026-02', totalCents: 15000, transactionCount: 1 },
+      { month: '2026-03', totalCents: 35000, transactionCount: 3 },
+      { month: '2026-04', totalCents: 999, transactionCount: 1 },
+    ]);
+  });
+
+  it('includes months with no spending', () => {
+    const trends = computeMonthlyTrends(transactions, 6, new Date(2026, 3, 15));
+    expect(trends[0]).toEqual({ month: '2025-11', totalCents: 0, transactionCount: 0 });
+  });
+});
+
+describe('listTransactions', () => {
+  const options = { sort: 'date_desc' as const, offset: 0, limit: 20 };
+
+  it('lists spending only', () => {
+    const { items, total } = listTransactions(transactions, options);
+    expect(total).toBe(5);
+    expect(items.every((t) => t.type === 'debit')).toBe(true);
+  });
+
+  it('returns a slice from the offset, with the total of all matches', () => {
+    const { items, total } = listTransactions(transactions, { ...options, offset: 2, limit: 2 });
+    expect(total).toBe(5);
+    expect(items.map((t) => t.date.slice(0, 10))).toEqual(['2026-03-02', '2026-03-01']);
+  });
+
+  it('filters by date range, category and merchant', () => {
+    expect(
+      listTransactions(transactions, {
+        ...options,
+        range: { from: '2026-03-01', to: '2026-03-31' },
+      }).total,
+    ).toBe(3);
+    expect(listTransactions(transactions, { ...options, category: 'dining' }).total).toBe(1);
+    expect(listTransactions(transactions, { ...options, search: 'woolworths' }).total).toBe(1);
   });
 });

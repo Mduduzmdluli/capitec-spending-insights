@@ -2,24 +2,51 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
-import type { CategoryBreakdown as BreakdownData } from '../../../api/schemas';
+import type { CategoriesResponse } from '../../../api/contract';
 import { server } from '../../../mocks/server';
 import { renderWithProviders } from '../../../test/render';
 import { CategoryBreakdown } from './CategoryBreakdown';
 
 const CATEGORIES_URL = '*/api/customers/:customerId/spending/categories';
-const range = { from: '2026-09-11', to: '2026-10-10' };
 
-const respondWith = (categories: BreakdownData['categories']) =>
-  server.use(http.get(CATEGORIES_URL, () => HttpResponse.json({ categories })));
+type ApiCategory = CategoriesResponse['categories'][number];
 
-const sixCategories: BreakdownData['categories'] = [
-  { category: 'groceries', totalCents: 300000, transactionCount: 12, percentage: 50 },
-  { category: 'dining', totalCents: 120000, transactionCount: 8, percentage: 20 },
-  { category: 'transport', totalCents: 60000, transactionCount: 6, percentage: 10 },
-  { category: 'fuel', totalCents: 60000, transactionCount: 2, percentage: 10 },
-  { category: 'shopping', totalCents: 30000, transactionCount: 1, percentage: 5 },
-  { category: 'health', totalCents: 30000, transactionCount: 3, percentage: 5 },
+const category = (
+  name: string,
+  amount: number,
+  transactionCount: number,
+  percentage: number,
+): ApiCategory => ({
+  name,
+  amount,
+  transactionCount,
+  percentage,
+  color: '#000000',
+  icon: 'circle',
+});
+
+/** The period the component asked for in its most recent request */
+let requestedPeriod: string | null = null;
+
+const respondWith = (categories: ApiCategory[]) =>
+  server.use(
+    http.get(CATEGORIES_URL, ({ request }) => {
+      requestedPeriod = new URL(request.url).searchParams.get('period');
+      return HttpResponse.json({
+        dateRange: { startDate: '2026-09-11', endDate: '2026-10-10' },
+        totalAmount: categories.reduce((total, entry) => total + entry.amount, 0),
+        categories,
+      });
+    }),
+  );
+
+const sixCategories = [
+  category('Groceries', 3000, 12, 50),
+  category('Dining', 1200, 8, 20),
+  category('Transportation', 600, 6, 10),
+  category('Fuel', 600, 2, 10),
+  category('Shopping', 300, 1, 5),
+  category('Health & Fitness', 300, 3, 5),
 ];
 
 const listItems = () => within(screen.getByRole('list')).getAllByRole('listitem');
@@ -27,13 +54,21 @@ const listItems = () => within(screen.getByRole('list')).getAllByRole('listitem'
 describe('CategoryBreakdown', () => {
   it('shows a loading state first', () => {
     respondWith(sixCategories);
-    renderWithProviders(<CategoryBreakdown range={range} />);
+    renderWithProviders(<CategoryBreakdown period="30d" />);
     expect(screen.getByRole('status')).toHaveTextContent('Loading spending by category');
+  });
+
+  it('asks the API for the selected period', async () => {
+    respondWith(sixCategories);
+    renderWithProviders(<CategoryBreakdown period="90d" />);
+
+    await screen.findByText('Groceries');
+    expect(requestedPeriod).toBe('90d');
   });
 
   it('ranks the top five categories with amount, payments and share', async () => {
     respondWith(sixCategories);
-    renderWithProviders(<CategoryBreakdown range={range} />);
+    renderWithProviders(<CategoryBreakdown period="30d" />);
 
     await screen.findByText('Groceries');
     const items = listItems();
@@ -44,6 +79,7 @@ describe('CategoryBreakdown', () => {
     expect(items[0]).toHaveTextContent('12 payments');
     expect(items[0]).toHaveTextContent('50% of spending');
 
+    expect(items[1]).toHaveTextContent('Eating out'); // the app's label for "Dining"
     expect(items[4]).toHaveTextContent('Shopping');
     expect(items[4]).toHaveTextContent('1 payment');
   });
@@ -51,7 +87,7 @@ describe('CategoryBreakdown', () => {
   it('reveals the remaining categories on request', async () => {
     respondWith(sixCategories);
     const user = userEvent.setup();
-    renderWithProviders(<CategoryBreakdown range={range} />);
+    renderWithProviders(<CategoryBreakdown period="30d" />);
 
     const toggle = await screen.findByRole('button', { name: 'Show 1 more category' });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -68,7 +104,7 @@ describe('CategoryBreakdown', () => {
 
   it('has no toggle when every category fits', async () => {
     respondWith(sixCategories.slice(0, 3));
-    renderWithProviders(<CategoryBreakdown range={range} />);
+    renderWithProviders(<CategoryBreakdown period="30d" />);
 
     await screen.findByText('Groceries');
     expect(screen.queryByRole('button', { name: /more categor/ })).not.toBeInTheDocument();
@@ -76,7 +112,7 @@ describe('CategoryBreakdown', () => {
 
   it('says so when nothing was spent', async () => {
     respondWith([]);
-    renderWithProviders(<CategoryBreakdown range={range} />);
+    renderWithProviders(<CategoryBreakdown period="30d" />);
     expect(await screen.findByText('No spending in this period.')).toBeInTheDocument();
   });
 
@@ -86,7 +122,7 @@ describe('CategoryBreakdown', () => {
         HttpResponse.json({ message: 'Unavailable' }, { status: 500 }),
       ),
     );
-    renderWithProviders(<CategoryBreakdown range={range} />);
+    renderWithProviders(<CategoryBreakdown period="30d" />);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'We couldn’t load your spending by category',
@@ -98,7 +134,7 @@ describe('CategoryBreakdown selection', () => {
   it('filters transactions by the chosen category, and clears on a second press', async () => {
     respondWith(sixCategories);
     const user = userEvent.setup();
-    const { getLocation } = renderWithProviders(<CategoryBreakdown range={range} />);
+    const { getLocation } = renderWithProviders(<CategoryBreakdown period="30d" />);
     const params = () => new URLSearchParams(getLocation()?.search);
 
     const groceries = await screen.findByRole('button', { name: /^Groceries/ });

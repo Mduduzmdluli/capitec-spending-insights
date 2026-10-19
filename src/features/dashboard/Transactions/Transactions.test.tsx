@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Transaction, TransactionPage } from '../../../api/schemas';
+import type { TransactionsResponse } from '../../../api/contract';
 import { server } from '../../../mocks/server';
 import { renderWithProviders } from '../../../test/render';
 import { Transactions } from './Transactions';
@@ -10,48 +10,48 @@ import { Transactions } from './Transactions';
 const TRANSACTIONS_URL = '*/api/customers/:customerId/transactions';
 const range = { from: '2026-09-11', to: '2026-10-10' };
 
-const tx = (overrides: Partial<Transaction> & Pick<Transaction, 'id' | 'date'>): Transaction => ({
+type ApiTransaction = TransactionsResponse['transactions'][number];
+
+const tx = (overrides: Partial<ApiTransaction> & Pick<ApiTransaction, 'id' | 'date'>) => ({
   merchant: 'Checkers',
-  category: 'groceries',
-  amountCents: 43210,
-  type: 'debit',
-  channel: 'card',
+  category: 'Groceries',
+  amount: 432.1,
+  paymentMethod: 'Debit Card',
   ...overrides,
 });
 
-const transactions: Transaction[] = [
+const transactions: ApiTransaction[] = [
   tx({ id: 't1', date: '2026-10-10T08:00:00.000Z' }),
   tx({
     id: 't2',
     date: '2026-10-09T08:00:00.000Z',
     merchant: "Nando's",
-    category: 'dining',
-    amountCents: 18950,
+    category: 'Dining',
+    amount: 189.5,
   }),
   tx({
     id: 't3',
     date: '2026-10-07T08:00:00.000Z',
-    merchant: 'Salary: Acme (Pty) Ltd',
-    category: 'income',
-    amountCents: 3250000,
-    type: 'credit',
-    channel: 'eft',
+    merchant: 'Netflix',
+    category: 'Entertainment',
+    amount: 199,
+    paymentMethod: 'Debit Order',
+    description: 'Monthly subscription',
   }),
 ];
 
-const page = (items: Transaction[], overrides: Partial<TransactionPage> = {}): TransactionPage => ({
-  items,
-  page: 1,
-  pageSize: 20,
-  totalItems: items.length,
-  totalPages: 1,
-  ...overrides,
+const page = (
+  items: ApiTransaction[],
+  { total = items.length, offset = 0, limit = 20 } = {},
+): TransactionsResponse => ({
+  transactions: items,
+  pagination: { total, limit, offset, hasMore: offset + items.length < total },
 });
 
 /** The query parameters of the most recent request, to check what the component asked for */
 let lastRequest = new URLSearchParams();
 
-const respondWith = (data: TransactionPage) =>
+const respondWith = (data: TransactionsResponse) =>
   server.use(
     http.get(TRANSACTIONS_URL, ({ request }) => {
       lastRequest = new URL(request.url).searchParams;
@@ -79,6 +79,18 @@ describe('Transactions', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Loading transactions');
   });
 
+  it('asks the API for the period using the documented parameters', async () => {
+    respondWith(page(transactions));
+    renderWithProviders(<Transactions range={range} />);
+    await screen.findByText('Checkers');
+
+    expect(lastRequest.get('startDate')).toBe(range.from);
+    expect(lastRequest.get('endDate')).toBe(range.to);
+    expect(lastRequest.get('limit')).toBe('20');
+    expect(lastRequest.get('offset')).toBe('0');
+    expect(lastRequest.get('sortBy')).toBe('date_desc');
+  });
+
   it('groups transactions under friendly day headings', async () => {
     respondWith(page(transactions));
     renderWithProviders(<Transactions range={range} />);
@@ -88,16 +100,16 @@ describe('Transactions', () => {
     expect(screen.getByRole('heading', { name: 'Wednesday 7 October' })).toBeInTheDocument();
   });
 
-  it('makes money in and out clear, including to screen readers', async () => {
+  it('shows amounts clearly, including to screen readers, and labels debit orders', async () => {
     respondWith(page(transactions));
     renderWithProviders(<Transactions range={range} />);
 
     const checkers = (await screen.findByText('Checkers')).closest('li');
     expect(checkers).toHaveTextContent(/Spent\s−R\s432,10/);
 
-    const salary = screen.getByText('Salary: Acme (Pty) Ltd').closest('li');
-    expect(salary).toHaveTextContent(/Received\s\+R\s32\s500,00/);
-    expect(salary).toHaveTextContent('EFT');
+    const netflix = screen.getByText('Netflix').closest('li');
+    expect(netflix).toHaveTextContent(/Spent\s−R\s199,00/);
+    expect(netflix).toHaveTextContent('Debit order');
   });
 
   it('summarises which results are shown', async () => {
@@ -114,11 +126,11 @@ describe('Transactions', () => {
 
     await user.type(screen.getByRole('searchbox', { name: 'Search transactions' }), 'nando');
 
-    await waitFor(() => expect(lastRequest.get('q')).toBe('nando'));
+    await waitFor(() => expect(lastRequest.get('search')).toBe('nando'));
     expect(urlParams(getLocation).get('q')).toBe('nando');
   });
 
-  it('filters by category', async () => {
+  it("filters by category, sending the API's category name", async () => {
     respondWith(page(transactions));
     const user = userEvent.setup();
     renderWithProviders(<Transactions range={range} />);
@@ -126,7 +138,7 @@ describe('Transactions', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Category' }), 'groceries');
 
-    await waitFor(() => expect(lastRequest.get('category')).toBe('groceries'));
+    await waitFor(() => expect(lastRequest.get('category')).toBe('Groceries'));
   });
 
   it('switches to a flat list when sorting by amount', async () => {
@@ -137,12 +149,12 @@ describe('Transactions', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Sort by' }), 'amount_desc');
 
-    await waitFor(() => expect(lastRequest.get('sort')).toBe('amount_desc'));
+    await waitFor(() => expect(lastRequest.get('sortBy')).toBe('amount_desc'));
     expect(screen.queryByRole('heading', { name: 'Today' })).not.toBeInTheDocument();
   });
 
-  it('moves between pages', async () => {
-    respondWith(page(transactions, { totalItems: 45, totalPages: 3 }));
+  it('moves between pages, sending the offset the API expects', async () => {
+    respondWith(page(transactions, { total: 45 }));
     const user = userEvent.setup();
     const { getLocation } = renderWithProviders(<Transactions range={range} />);
 
@@ -151,7 +163,7 @@ describe('Transactions', () => {
 
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
-    await waitFor(() => expect(lastRequest.get('page')).toBe('2'));
+    await waitFor(() => expect(lastRequest.get('offset')).toBe('20'));
     expect(urlParams(getLocation).get('page')).toBe('2');
   });
 

@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { formatDateRange, getDateRange } from '../../lib/period';
+import { CategoryBreakdown } from './CategoryBreakdown/CategoryBreakdown';
 import styles from './DashboardPage.module.css';
 import { PeriodSelector } from './PeriodSelector/PeriodSelector';
-import { SpendingSummary } from './SpendingSummary/SpendingSummary.tsx';
-import { SpendingTrend } from './SpendingTrend/SpendingTrend.tsx';
-import { CategoryBreakdown } from './CategoryBreakdown/CategoryBreakdown.tsx';
+import { SpendingSummary } from './SpendingSummary/SpendingSummary';
+import { SpendingTrend } from './SpendingTrend/SpendingTrend';
 import { Transactions } from './Transactions/Transactions';
 import { usePeriod } from './usePeriod';
 
@@ -24,12 +24,13 @@ export function DashboardPage() {
         <PeriodSelector value={period} onChange={setPeriod} />
       </div>
 
-      <SpendingSummary period={period} range={range} />
+      <SpendingSummary period={period} />
 
       <div className={styles.insights}>
-        <SpendingTrend period={period} range={range} />
-        <CategoryBreakdown range={range} />
+        <SpendingTrend />
+        <CategoryBreakdown period={period} />
       </div>
+
       <Transactions range={range} />
     </div>
   );

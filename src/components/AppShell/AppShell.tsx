@@ -55,8 +55,13 @@ function CustomerBadge() {
   if (isError) return null;
   if (isPending) return <div className={styles.customerSkeleton} aria-hidden="true" />;
 
-  const initials = `${data.firstName.charAt(0)}${data.lastName.charAt(0)}`;
-  const lastFour = data.accountNumberMasked.slice(-4);
+  const initials = data.name
+    .split(/\s+/)
+    .map((part) => part.charAt(0))
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+  const accountType = `${data.accountType.charAt(0).toUpperCase()}${data.accountType.slice(1)} account`;
 
   return (
     <div className={styles.customer}>
@@ -64,11 +69,8 @@ function CustomerBadge() {
         {initials}
       </span>
       <span className={styles.customerText}>
-        <span className={styles.customerName}>{`${data.firstName} ${data.lastName}`}</span>
-        <span className={styles.account}>
-          <span aria-hidden="true">{data.accountNumberMasked}</span>
-          <span className="visually-hidden">{`Account ending in ${lastFour}`}</span>
-        </span>
+        <span className={styles.customerName}>{data.name}</span>
+        <span className={styles.account}>{accountType}</span>
       </span>
     </div>
   );

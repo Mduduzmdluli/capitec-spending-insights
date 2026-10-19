@@ -2,19 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { describeChange } from './describeChange';
 
 describe('describeChange', () => {
-  it('reports an increase', () => {
-    expect(describeChange(11200, 10000)).toEqual({ kind: 'up', percent: 12 });
+  it('reports an increase, rounded to a whole percent', () => {
+    expect(describeChange(12.4)).toEqual({ kind: 'up', percent: 12 });
   });
 
   it('reports a decrease', () => {
-    expect(describeChange(8800, 10000)).toEqual({ kind: 'down', percent: 12 });
+    expect(describeChange(-3.2)).toEqual({ kind: 'down', percent: 3 });
   });
 
   it('treats changes that round to 0% as the same', () => {
-    expect(describeChange(10040, 10000)).toEqual({ kind: 'same' });
+    expect(describeChange(0.3)).toEqual({ kind: 'same' });
+    expect(describeChange(-0.4)).toEqual({ kind: 'same' });
   });
 
-  it('has nothing to compare against when the previous period is empty', () => {
-    expect(describeChange(5000, 0)).toEqual({ kind: 'none' });
+  it('has nothing to compare against when the API sends no change', () => {
+    expect(describeChange(null)).toEqual({ kind: 'none' });
   });
 });

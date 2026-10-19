@@ -1,16 +1,16 @@
-import type { Customer, Transaction } from '../api/schemas';
+import type { Transaction } from '../api/schemas';
 import { MOCK_USERS } from './data/customers';
 import type { MockUser } from './data/customers';
 import { generateTransactions } from './data/generate';
 
-export function findCustomer(customerId: string): Customer | undefined {
-  return MOCK_USERS.find((user) => user.customer.id === customerId)?.customer;
+export function findUser(customerId: string): MockUser | undefined {
+  return MOCK_USERS.find((user) => user.id === customerId);
 }
 
 /** Usernames are matched case-insensitively, ignoring surrounding spaces. */
 export function findUserByUsername(username: string): MockUser | undefined {
   const normalised = username.trim().toLowerCase();
-  return MOCK_USERS.find((user) => user.username === normalised);
+  return MOCK_USERS.find((user) => user.username.toLowerCase() === normalised);
 }
 
 const transactionsByCustomer = new Map<string, Transaction[]>();
@@ -20,7 +20,7 @@ export function getTransactions(customerId: string): Transaction[] {
   const cached = transactionsByCustomer.get(customerId);
   if (cached) return cached;
 
-  const user = MOCK_USERS.find((candidate) => candidate.customer.id === customerId);
+  const user = findUser(customerId);
   const transactions = user
     ? generateTransactions({ seed: user.seed, days: 730, spending: user.spending })
     : [];

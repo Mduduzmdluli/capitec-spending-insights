@@ -1,18 +1,26 @@
 import { delay, http, HttpResponse } from 'msw';
 import type { z } from 'zod';
+import { toRand } from '../api/adapters';
 import {
-  dateRangeParamsSchema,
-  loginRequestSchema,
-  transactionsParamsSchema,
-  trendsParamsSchema,
-} from '../api/schemas';
+  CATEGORY_API_NAMES,
+  categoriesQuerySchema,
+  categoryIdFromApiName,
+  summaryQuerySchema,
+  transactionsQuerySchema,
+  trendsQuerySchema,
+} from '../api/contract';
+import type { Transaction } from '../api/schemas';
+import { loginRequestSchema } from '../api/schemas';
+import { getDateRange } from '../lib/period';
 import {
   computeCategoryBreakdown,
+  computeMonthlyTrends,
   computeSummary,
-  computeTrends,
-  queryTransactions,
+  listTransactions,
+  previousRange,
 } from './data/aggregations';
-import { findCustomer, findUserByUsername, getTransactions } from './db';
+import { CATEGORY_STYLES } from './data/categoryStyles';
+import { findUser, findUserByUsername, getTransactions } from './db';
 import { clearAttempts, lockoutMinutesRemaining, recordFailedAttempt } from './loginAttempts';
 import { createSession, deleteSession, touchSession } from './sessions';
 
@@ -29,7 +37,6 @@ const errorResponse = (status: number, message: string) =>
   HttpResponse.json({ message }, { status });
 
 const badRequest = (message: string) => errorResponse(400, message);
-const INVALID_RANGE = '"from" must be on or before "to"';
 
 /** The token from an "Authorization: Bearer <token>" header, if present. */
 export function bearerToken(request: Request): string | null {
@@ -71,7 +78,36 @@ function parseQuery<TSchema extends z.ZodType>(request: Request, schema: TSchema
   return schema.safeParse(Object.fromEntries(new URL(request.url).searchParams));
 }
 
-// ---- Signing in and out ----
+// ---- Converting results into the documented format ----
+
+/** Percentage change to one decimal place, or null when there's nothing to compare with. */
+function percentChange(current: number, previous: number): number | null {
+  if (previous === 0) return null;
+  return Math.round(((current - previous) / previous) * 1000) / 10;
+}
+
+const PAYMENT_METHODS: Record<Transaction['channel'], string> = {
+  card: 'Debit Card',
+  debit_order: 'Debit Order',
+  eft: 'EFT',
+};
+
+function toApiTransaction(transaction: Transaction) {
+  const style = CATEGORY_STYLES[transaction.category];
+  return {
+    id: transaction.id,
+    date: transaction.date,
+    merchant: transaction.merchant,
+    category: CATEGORY_API_NAMES[transaction.category],
+    amount: toRand(transaction.amountCents),
+    description: transaction.channel === 'debit_order' ? 'Monthly debit order' : undefined,
+    paymentMethod: PAYMENT_METHODS[transaction.channel],
+    icon: style.icon,
+    categoryColor: style.color,
+  };
+}
+
+// ---- Signing in and out (an addition beyond the documented API) ----
 
 const authHandlers = [
   http.post('*/api/auth/login', async ({ request }) => {
@@ -97,11 +133,11 @@ const authHandlers = [
     }
 
     clearAttempts(username);
-    const session = createSession(user.customer.id);
+    const session = createSession(user.id);
     return HttpResponse.json({
       token: session.token,
       expiresAt: new Date(session.expiresAt).toISOString(),
-      customer: user.customer,
+      customer: { id: user.id, name: user.name },
     });
   }),
 
@@ -112,57 +148,152 @@ const authHandlers = [
   }),
 ];
 
-// ---- Customer data: every endpoint requires the customer's own session ----
+// ---- The documented endpoints: each requires the customer's own session ----
 
 const dataHandlers = [
-  http.get(CUSTOMER_PATH, async ({ params, request }) => {
+  // 1. Customer profile
+  http.get(`${CUSTOMER_PATH}/profile`, async ({ params, request }) => {
     const failure = await precheck(request, params.customerId);
     if (failure) return failure;
-    return HttpResponse.json(findCustomer(String(params.customerId)) ?? null);
+
+    const user = findUser(String(params.customerId));
+    if (!user) return errorResponse(404, 'Customer not found');
+
+    const spentCents = getTransactions(user.id)
+      .filter((t) => t.type === 'debit')
+      .reduce((total, t) => total + t.amountCents, 0);
+
+    return HttpResponse.json({
+      customerId: user.id,
+      name: user.name,
+      email: user.email,
+      joinDate: user.joinDate,
+      accountType: user.accountType,
+      totalSpent: toRand(spentCents),
+      currency: 'ZAR',
+    });
   }),
 
-  http.get(`${CUSTOMER_PATH}/summary`, async ({ params, request }) => {
+  // 2. Spending summary
+  http.get(`${CUSTOMER_PATH}/spending/summary`, async ({ params, request }) => {
     const failure = await precheck(request, params.customerId);
     if (failure) return failure;
-    const query = parseQuery(request, dateRangeParamsSchema);
+    const query = parseQuery(request, summaryQuerySchema);
     if (!query.success) return badRequest('Invalid query parameters');
-    if (query.data.from > query.data.to) return badRequest(INVALID_RANGE);
-    return HttpResponse.json(
-      computeSummary(getTransactions(String(params.customerId)), query.data),
-    );
+
+    const transactions = getTransactions(String(params.customerId));
+    const range = getDateRange(query.data.period);
+    const current = computeSummary(transactions, range);
+    const previous = computeSummary(transactions, previousRange(range));
+
+    return HttpResponse.json({
+      period: query.data.period,
+      totalSpent: toRand(current.totalSpentCents),
+      transactionCount: current.transactionCount,
+      averageTransaction: toRand(current.averageTransactionCents),
+      topCategory: current.topCategory ? CATEGORY_API_NAMES[current.topCategory] : null,
+      comparedToPrevious: {
+        spentChange: percentChange(current.totalSpentCents, previous.totalSpentCents),
+        transactionChange: percentChange(current.transactionCount, previous.transactionCount),
+      },
+    });
   }),
 
-  http.get(`${CUSTOMER_PATH}/spending/trends`, async ({ params, request }) => {
-    const failure = await precheck(request, params.customerId);
-    if (failure) return failure;
-    const query = parseQuery(request, trendsParamsSchema);
-    if (!query.success) return badRequest('Invalid query parameters');
-    if (query.data.from > query.data.to) return badRequest(INVALID_RANGE);
-    return HttpResponse.json(
-      computeTrends(getTransactions(String(params.customerId)), query.data, query.data.interval),
-    );
-  }),
-
+  // 3. Spending by category, for a period or a custom date range
   http.get(`${CUSTOMER_PATH}/spending/categories`, async ({ params, request }) => {
     const failure = await precheck(request, params.customerId);
     if (failure) return failure;
-    const query = parseQuery(request, dateRangeParamsSchema);
+    const query = parseQuery(request, categoriesQuerySchema);
     if (!query.success) return badRequest('Invalid query parameters');
-    if (query.data.from > query.data.to) return badRequest(INVALID_RANGE);
-    return HttpResponse.json(
-      computeCategoryBreakdown(getTransactions(String(params.customerId)), query.data),
+
+    const { period, startDate, endDate } = query.data;
+    if ((startDate && !endDate) || (!startDate && endDate)) {
+      return badRequest('Provide both startDate and endDate, or neither');
+    }
+    if (startDate && endDate && startDate > endDate) {
+      return badRequest('startDate must be on or before endDate');
+    }
+
+    // A custom range takes priority over the period
+    const range = startDate && endDate ? { from: startDate, to: endDate } : getDateRange(period);
+    const { categories } = computeCategoryBreakdown(
+      getTransactions(String(params.customerId)),
+      range,
     );
+    const totalCents = categories.reduce((total, entry) => total + entry.totalCents, 0);
+
+    return HttpResponse.json({
+      dateRange: { startDate: range.from, endDate: range.to },
+      totalAmount: toRand(totalCents),
+      categories: categories.map((entry) => ({
+        name: CATEGORY_API_NAMES[entry.category],
+        amount: toRand(entry.totalCents),
+        percentage: entry.percentage,
+        transactionCount: entry.transactionCount,
+        ...CATEGORY_STYLES[entry.category],
+      })),
+    });
   }),
 
+  // 4. Monthly spending trends
+  http.get(`${CUSTOMER_PATH}/spending/trends`, async ({ params, request }) => {
+    const failure = await precheck(request, params.customerId);
+    if (failure) return failure;
+    const query = parseQuery(request, trendsQuerySchema);
+    if (!query.success) return badRequest('months must be a whole number from 1 to 24');
+
+    const trends = computeMonthlyTrends(
+      getTransactions(String(params.customerId)),
+      query.data.months,
+    );
+
+    return HttpResponse.json({
+      trends: trends.map((trend) => ({
+        month: trend.month,
+        totalSpent: toRand(trend.totalCents),
+        transactionCount: trend.transactionCount,
+        averageTransaction:
+          trend.transactionCount > 0
+            ? toRand(Math.round(trend.totalCents / trend.transactionCount))
+            : 0,
+      })),
+    });
+  }),
+
+  // 5. Transactions, with filtering and offset pagination
   http.get(`${CUSTOMER_PATH}/transactions`, async ({ params, request }) => {
     const failure = await precheck(request, params.customerId);
     if (failure) return failure;
-    const query = parseQuery(request, transactionsParamsSchema);
+    const query = parseQuery(request, transactionsQuerySchema);
     if (!query.success) return badRequest('Invalid query parameters');
-    if (query.data.from > query.data.to) return badRequest(INVALID_RANGE);
-    return HttpResponse.json(
-      queryTransactions(getTransactions(String(params.customerId)), query.data),
-    );
+
+    const { limit, offset, category, startDate, endDate, sortBy, search } = query.data;
+
+    const categoryId = category ? categoryIdFromApiName(category) : undefined;
+    if (category && !categoryId) return badRequest(`Unknown category "${category}"`);
+    if (startDate && endDate && startDate > endDate) {
+      return badRequest('startDate must be on or before endDate');
+    }
+
+    // Either end of the range may be left open
+    const range =
+      startDate || endDate
+        ? { from: startDate ?? '0000-01-01', to: endDate ?? '9999-12-31' }
+        : undefined;
+
+    const { items, total } = listTransactions(getTransactions(String(params.customerId)), {
+      range,
+      category: categoryId,
+      search,
+      sort: sortBy,
+      offset,
+      limit,
+    });
+
+    return HttpResponse.json({
+      transactions: items.map(toApiTransaction),
+      pagination: { total, limit, offset, hasMore: offset + items.length < total },
+    });
   }),
 ];
 

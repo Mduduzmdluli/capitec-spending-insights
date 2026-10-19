@@ -1,9 +1,13 @@
-import type { Customer } from '../../api/schemas';
 import { MDUDUZI_SPENDING, THANDI_SPENDING } from './merchants';
 import type { SpendingProfile } from './merchants';
 
+/** A customer as the mock server stores them: their profile, sign-in details and spending. */
 export type MockUser = {
-  customer: Customer;
+  id: string;
+  name: string;
+  email: string;
+  joinDate: string;
+  accountType: string;
   username: string;
   /**
    * Demo only. A real backend never stores passwords: it stores a salted hash
@@ -16,24 +20,22 @@ export type MockUser = {
 
 export const MOCK_USERS: readonly MockUser[] = [
   {
-    customer: {
-      id: 'cust_001',
-      firstName: 'Thandi',
-      lastName: 'Mokoena',
-      accountNumberMasked: '•••• 4821',
-    },
+    id: 'cust_001',
+    name: 'Thandi Mokoena',
+    email: 'thandi.mokoena@gmail.com',
+    joinDate: '2021-03-14',
+    accountType: 'premium',
     username: 'thandi',
     password: 'Thandi@2026',
     seed: 42,
     spending: THANDI_SPENDING,
   },
   {
-    customer: {
-      id: 'cust_002',
-      firstName: 'Mduduzi',
-      lastName: 'Mdluli',
-      accountNumberMasked: '•••• 7310',
-    },
+    id: 'cust_002',
+    name: 'Mduduzi Mdluli',
+    email: 'mduduzmdluli@gmail.com',
+    joinDate: '2024-06-02',
+    accountType: 'standard',
     username: 'mdlulim',
     password: 'Mdu@2026',
     seed: 7,

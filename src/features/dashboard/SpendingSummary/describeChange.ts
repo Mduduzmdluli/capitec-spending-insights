@@ -3,13 +3,11 @@ export type Change =
   | { kind: 'same' } // rounds to 0%
   | { kind: 'up' | 'down'; percent: number };
 
-/** How spending this period compares with the previous one, rounded to a whole percent. */
-export function describeChange(currentCents: number, previousCents: number): Change {
-  if (previousCents === 0) return { kind: 'none' };
+/** Describes a percentage change from the API, rounded to a whole percent for display. */
+export function describeChange(changePercent: number | null): Change {
+  if (changePercent === null) return { kind: 'none' };
 
-  const ratio = (currentCents - previousCents) / previousCents;
-  const percent = Math.round(Math.abs(ratio) * 100);
-
+  const percent = Math.round(Math.abs(changePercent));
   if (percent === 0) return { kind: 'same' };
-  return { kind: ratio > 0 ? 'up' : 'down', percent };
+  return { kind: changePercent > 0 ? 'up' : 'down', percent };
 }
