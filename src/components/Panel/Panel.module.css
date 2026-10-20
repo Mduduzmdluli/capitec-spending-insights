@@ -63,7 +63,6 @@
   }
 }
 
-
 /* When a panel is stretched to match its neighbour, keep its content at the top */
 .panel {
   align-content: start;
