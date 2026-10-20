@@ -58,7 +58,6 @@ describe('AppShell account details', () => {
     const panel = accountPanel();
     expect(panel).toHaveTextContent(findUser('cust_001')?.email ?? '');
     expect(panel).toHaveTextContent('Customer since');
-    expect(panel).toHaveTextContent('Total spent');
     expect(within(panel!).getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
   });
 

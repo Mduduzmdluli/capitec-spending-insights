@@ -20,7 +20,7 @@
 
 .trigger:hover,
 .trigger[aria-expanded='true'] {
-  background: rgb(255 255 255 / 0.1);
+  background: var(--color-header-hover);
 }
 
 .avatar {
@@ -65,7 +65,7 @@
 .skeleton {
   width: 2.5rem;
   height: 2.5rem;
-  background: rgb(255 255 255 / 0.15);
+  background: var(--color-skeleton);
   border-radius: var(--radius-full);
 }
 
@@ -79,7 +79,7 @@
   color: var(--color-on-header);
   cursor: pointer;
   background: transparent;
-  border: 1px solid rgb(255 255 255 / 0.25);
+  border: 1px solid var(--color-header-border);
   border-radius: var(--radius-sm);
 }
 

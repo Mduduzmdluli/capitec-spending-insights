@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../../auth/useAuth';
 import { AccountMenu } from './AccountMenu';
 import styles from './AppShell.module.css';
+import { BackToTop } from './BackToTop';
 
 type AppShellProps = {
   children: ReactNode;
@@ -41,6 +42,7 @@ export function AppShell({ children }: AppShellProps) {
       <main id="main" className={styles.main} tabIndex={-1}>
         {children}
       </main>
+      <BackToTop targetId="main" />
     </div>
   );
 }
