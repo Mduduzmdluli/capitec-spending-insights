@@ -96,8 +96,8 @@ describe('signing out', () => {
   it('signs out and asks for sign-in again', async () => {
     const user = userEvent.setup();
     renderWithProviders(<App />);
-    await screen.findByText(/You’ve spent/);
 
+    await user.click(await screen.findByRole('button', { name: /Thandi Mokoena/ }));
     await user.click(screen.getByRole('button', { name: 'Sign out' }));
 
     expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
