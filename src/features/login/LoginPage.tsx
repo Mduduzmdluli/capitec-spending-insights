@@ -11,6 +11,7 @@ import styles from './LoginPage.module.css';
 const SIGN_OUT_MESSAGES: Record<SignOutReason, string> = {
   'signed-out': 'You’ve signed out.',
   expired: 'Your session has expired. Please sign in again.',
+  inactive: 'You were signed out after a few minutes without activity, to keep your account safe.',
 };
 
 type FieldErrors = { username?: string; password?: string };

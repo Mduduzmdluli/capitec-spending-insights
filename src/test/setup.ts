@@ -9,6 +9,17 @@ class ResizeObserverStub {
   unobserve() {}
   disconnect() {}
 }
+
+// jsdom doesn't implement <dialog>'s methods yet; tests only need open and closed
+if (typeof HTMLDialogElement !== 'undefined') {
+  HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+    this.open = true;
+  };
+  HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+    this.open = false;
+  };
+}
+
 globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));

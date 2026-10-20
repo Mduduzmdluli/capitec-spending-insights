@@ -1,0 +1,72 @@
+.dialog {
+  width: min(26rem, calc(100vw - 2 * var(--space-4)));
+  padding: var(--space-6);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 48px rgb(0 0 0 / 0.25);
+}
+
+.dialog::backdrop {
+  background: rgb(15 23 42 / 0.55);
+}
+
+.icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--color-warn);
+}
+
+.title {
+  margin-top: var(--space-3);
+  font-size: var(--text-xl);
+}
+
+.text {
+  margin-top: var(--space-2);
+  color: var(--color-ink-muted);
+}
+
+.countdown {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.primary,
+.secondary {
+  min-height: 2.75rem;
+  padding: 0 var(--space-5);
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.primary {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: none;
+}
+
+.primary:hover {
+  background: var(--color-accent-strong);
+}
+
+.secondary {
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.secondary:hover {
+  background: var(--color-surface-sunken);
+}

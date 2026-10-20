@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 import type { LoginRequest, Session } from '../api/schemas';
 
-export type SignOutReason = 'signed-out' | 'expired';
+export type SignOutReason = 'signed-out' | 'expired' | 'inactive';
 
 export type AuthContextValue = {
   session: Session | null;
