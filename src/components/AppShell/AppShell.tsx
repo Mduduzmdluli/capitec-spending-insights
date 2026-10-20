@@ -28,7 +28,11 @@ export function AppShell({ children }: AppShellProps) {
         <div className={styles.headerInner}>
           <div className={styles.brand}>
             <span className={styles.logoTile}>
-              <img className={styles.logo} src="/logo.svg" alt="Capitec" />
+              <picture>
+                {/* Phones get the compact mark; wider screens get the full wordmark */}
+                <source media="(max-width: 40rem)" srcSet="/favicon.svg" />
+                <img className={styles.logo} src="/logo.svg" alt="Capitec" />
+              </picture>
             </span>
             <span className={styles.productName}>Spending insights</span>
           </div>

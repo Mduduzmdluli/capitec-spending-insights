@@ -26,7 +26,7 @@
 .logoTile {
   display: flex;
   align-items: center;
-  justify-self: start;
+  justify-self: center;
   height: 2.75rem;
   padding: 0 var(--space-3);
   background: #ffffff;
@@ -43,6 +43,8 @@
 .heading {
   display: grid;
   gap: var(--space-1);
+  justify-items: center;
+  text-align: center;
 }
 
 .title {

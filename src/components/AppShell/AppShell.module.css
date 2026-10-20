@@ -154,7 +154,7 @@
 }
 
 /* The smallest phones: the page heading already says what this page is */
-@media (max-width: 26rem) {
+@media (max-width: 40rem) {
   .productName {
     position: absolute;
     width: 1px;
@@ -209,5 +209,18 @@
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
+  }
+}
+
+/* Phones: a square tile for the compact mark */
+@media (max-width: 40rem) {
+  .logoTile {
+    justify-content: center;
+    width: 2.75rem;
+    padding: 0;
+  }
+
+  .logo {
+    height: 2.25rem;
   }
 }
