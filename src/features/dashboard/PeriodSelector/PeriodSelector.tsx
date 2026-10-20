@@ -5,13 +5,20 @@ import styles from './PeriodSelector.module.css';
 type PeriodSelectorProps = {
   value: Period;
   onChange: (period: Period) => void;
+  /** The periods the server offers. Until it has said, every period is shown. */
+  available?: readonly Period[];
 };
 
-export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
+export function PeriodSelector({ value, onChange, available }: PeriodSelectorProps) {
+  const options =
+    available && available.length > 0
+      ? PERIODS.filter((period) => available.includes(period.id) || period.id === value)
+      : PERIODS;
+
   return (
     <fieldset className={styles.selector}>
       <legend className="visually-hidden">Show spending for the last</legend>
-      {PERIODS.map((period) => (
+      {options.map((period) => (
         <label key={period.id} className={styles.option}>
           <input
             className={styles.input}

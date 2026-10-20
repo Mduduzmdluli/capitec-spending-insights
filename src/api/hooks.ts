@@ -18,6 +18,7 @@ export const queryKeys = {
   transactions: (customerId: string, query: TransactionQuery) =>
     [...baseKey(customerId), 'transactions', query] as const,
   goals: (customerId: string) => [...baseKey(customerId), 'goals'] as const,
+  filters: (customerId: string) => [...baseKey(customerId), 'filters'] as const,
 };
 
 export function useCustomer() {
@@ -67,5 +68,15 @@ export function useGoals() {
   return useQuery({
     queryKey: queryKeys.goals(auth.customerId),
     queryFn: ({ signal }) => customerApi.getGoals(auth, signal),
+  });
+}
+
+export function useFilters() {
+  const auth = useApiAuth();
+  return useQuery({
+    queryKey: queryKeys.filters(auth.customerId),
+    queryFn: ({ signal }) => customerApi.getFilters(auth, signal),
+    // The available options rarely change, so there's no need to ask again for a while
+    staleTime: 30 * 60 * 1000,
   });
 }

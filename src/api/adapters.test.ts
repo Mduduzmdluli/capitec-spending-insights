@@ -4,6 +4,7 @@ import {
   toCents,
   toChannel,
   toCustomer,
+  toFilters,
   toGoals,
   toSpendingSummary,
   toSpendingTrends,
@@ -244,5 +245,49 @@ describe('toGoals', () => {
         status: 'on_track',
       },
     ]);
+  });
+});
+
+describe('toFilters', () => {
+  const style = { color: '#000000', icon: 'circle' };
+
+  it('maps the documented example', () => {
+    expect(
+      toFilters({
+        categories: [
+          'Groceries',
+          'Entertainment',
+          'Transportation',
+          'Dining',
+          'Shopping',
+          'Utilities',
+        ].map((name) => ({ name, ...style })),
+        dateRangePresets: [
+          { label: 'Last 7 days', value: '7d' },
+          { label: 'Last 30 days', value: '30d' },
+          { label: 'Last 90 days', value: '90d' },
+          { label: 'Last year', value: '1y' },
+        ],
+      }),
+    ).toEqual({
+      categories: ['groceries', 'entertainment', 'transport', 'dining', 'shopping', 'utilities'],
+      periods: ['7d', '30d', '90d', '1y'],
+    });
+  });
+
+  it('skips options the app does not recognise, and income', () => {
+    const filters = toFilters({
+      categories: [
+        { name: 'Groceries', ...style },
+        { name: 'Gambling', ...style },
+        { name: 'Income', ...style },
+      ],
+      dateRangePresets: [
+        { label: 'Last 30 days', value: '30d' },
+        { label: 'Last decade', value: '10y' },
+      ],
+    });
+
+    expect(filters).toEqual({ categories: ['groceries'], periods: ['30d'] });
   });
 });

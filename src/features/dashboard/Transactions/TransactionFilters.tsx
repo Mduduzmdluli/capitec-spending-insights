@@ -1,6 +1,5 @@
 import { Search, X } from 'lucide-react';
 import { useId } from 'react';
-import { CATEGORY_IDS } from '../../../api/schemas';
 import type { CategoryId, TransactionSort } from '../../../api/schemas';
 import { CATEGORIES } from '../../../lib/categories';
 import styles from './Transactions.module.css';
@@ -15,6 +14,8 @@ const SORT_OPTIONS: { value: TransactionSort; label: string }[] = [
 type TransactionFiltersProps = {
   searchText: string;
   onSearchChange: (value: string) => void;
+  /** The categories to offer, from the filters endpoint */
+  categories: readonly CategoryId[];
   category: CategoryId | null;
   onCategoryChange: (category: CategoryId | null) => void;
   sort: TransactionSort;
@@ -26,6 +27,7 @@ type TransactionFiltersProps = {
 export function TransactionFilters({
   searchText,
   onSearchChange,
+  categories,
   category,
   onCategoryChange,
   sort,
@@ -34,6 +36,9 @@ export function TransactionFilters({
   onClear,
 }: TransactionFiltersProps) {
   const id = useId();
+  // Keep the current selection available, even if it isn't in the list
+  const categoryOptions =
+    category && !categories.includes(category) ? [...categories, category] : categories;
 
   return (
     <div className={styles.filters} role="search" aria-label="Filter transactions">
@@ -65,7 +70,7 @@ export function TransactionFilters({
         }
       >
         <option value="">All categories</option>
-        {CATEGORY_IDS.map((categoryId) => (
+        {categoryOptions.map((categoryId) => (
           <option key={categoryId} value={categoryId}>
             {CATEGORIES[categoryId].label}
           </option>

@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { getErrorMessage } from '../../../api/client';
-import { useTransactions } from '../../../api/hooks';
+import { useFilters, useTransactions } from '../../../api/hooks';
+import { CATEGORY_IDS } from '../../../api/schemas';
 import type { DateRange, TransactionQuery } from '../../../api/schemas';
 import { ErrorState } from '../../../components/ErrorState/ErrorState';
 import { Panel } from '../../../components/Panel/Panel';
@@ -16,6 +17,9 @@ import { useTransactionFilters, TRANSACTIONS_PANEL_ID } from './useTransactionFi
 const PAGE_SIZE = 20;
 const SEARCH_DELAY_MS = 300;
 const countFormatter = new Intl.NumberFormat('en-ZA');
+
+/** Shown until the filters endpoint replies, or if it fails: every spending category. */
+const ALL_SPENDING_CATEGORIES = CATEGORY_IDS.filter((id) => id !== 'income');
 
 type TransactionsProps = {
   range: DateRange;
@@ -37,6 +41,7 @@ export function Transactions({ range }: TransactionsProps) {
   };
   const { data, error, isPending, isError, isFetching, isPlaceholderData, refetch } =
     useTransactions(query);
+  const { data: availableFilters } = useFilters();
 
   const handleSearchChange = (value: string) => {
     setSearchText(value);
@@ -111,6 +116,7 @@ export function Transactions({ range }: TransactionsProps) {
         <TransactionFilters
           searchText={searchText}
           onSearchChange={handleSearchChange}
+          categories={availableFilters?.categories ?? ALL_SPENDING_CATEGORIES}
           category={filters.category}
           onCategoryChange={(category) => update({ category })}
           sort={filters.sort}
