@@ -12,17 +12,15 @@
   --category-income: #1e7b4f;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --category-groceries: #4fc08d;
-    --category-dining: #f0a257;
-    --category-transport: #7aa2f0;
-    --category-fuel: #a68ff7;
-    --category-shopping: #e37ba6;
-    --category-entertainment: #e0b54a;
-    --category-utilities: #4fc0d3;
-    --category-airtime-data: #9aaabd;
-    --category-health: #c99572;
-    --category-income: #4cc38a;
-  }
+:root[data-theme='dark'] {
+  --category-groceries: #4fc08d;
+  --category-dining: #f0a257;
+  --category-transport: #7aa2f0;
+  --category-fuel: #a68ff7;
+  --category-shopping: #e37ba6;
+  --category-entertainment: #e0b54a;
+  --category-utilities: #4fc0d3;
+  --category-airtime-data: #9aaabd;
+  --category-health: #c99572;
+  --category-income: #4cc38a;
 }

@@ -1,5 +1,7 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { findUser } from '../../mocks/db';
 import { renderWithProviders } from '../../test/render';
 import { AppShell } from './AppShell';
 
@@ -10,6 +12,9 @@ const renderShell = (signedInAs?: string) =>
     </AppShell>,
     { signedInAs },
   );
+
+const accountButton = (name: RegExp) => screen.findByRole('button', { name });
+const accountPanel = () => screen.queryByRole('region', { name: 'Your account' });
 
 describe('AppShell', () => {
   it('shows the signed-in customer once loaded', async () => {
@@ -38,9 +43,43 @@ describe('AppShell', () => {
       '#main',
     );
   });
+});
 
-  it('offers a way to sign out', () => {
+describe('AppShell account details', () => {
+  it('opens the customer’s details, with a way to sign out', async () => {
+    const user = userEvent.setup();
     renderShell();
-    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+    const button = await accountButton(/Thandi Mokoena/);
+
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    await user.click(button);
+
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    const panel = accountPanel();
+    expect(panel).toHaveTextContent(findUser('cust_001')?.email ?? '');
+    expect(panel).toHaveTextContent('Customer since');
+    expect(within(panel!).getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+  });
+
+  it('closes with Escape and returns focus to the button', async () => {
+    const user = userEvent.setup();
+    renderShell();
+    const button = await accountButton(/Thandi Mokoena/);
+
+    await user.click(button);
+    await user.keyboard('{Escape}');
+
+    expect(accountPanel()).not.toBeInTheDocument();
+    expect(button).toHaveFocus();
+  });
+
+  it('closes when clicking elsewhere', async () => {
+    const user = userEvent.setup();
+    renderShell();
+
+    await user.click(await accountButton(/Thandi Mokoena/));
+    await user.click(screen.getByText('Page content'));
+
+    expect(accountPanel()).not.toBeInTheDocument();
   });
 });

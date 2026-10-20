@@ -1,28 +1,36 @@
+/*
+ * Colours sampled from capitecbank.co.za. Light is the default, matching Capitec's site.
+ * The dark palette is kept behind data-theme="dark", ready for a theme switch.
+ */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
-  /* Brand (sampled from the Capitec logo) */
-  --color-brand-navy: #00466e;
-  --color-brand-red: #e63934;
+  /* Brand */
+  --color-brand-navy: #0f369a; /* royal navy: headlines */
+  --color-brand-blue: #305bc9; /* Capitec blue */
+  --color-brand-blue-bright: #3f72e7; /* button blue on the website: 4.4:1 with white, so not used for text */
+  --color-brand-red: #d33327;
 
   /* Colour roles */
-  --color-ink: #0f2a3f;
-  --color-ink-muted: #4a6680;
-  --color-page: #eff3f6;
+  --color-ink: #1f2430;
+  --color-ink-muted: #5f6672; /* 5.7:1 on white */
+  --color-page: #f5f5f5;
   --color-surface: #ffffff;
-  --color-surface-sunken: #f5f7fa;
-  --color-border: #d6e1e8;
-  --color-accent: #276284; /* Links and focus: 6.6:1 on white */
-  --color-accent-strong: var(--color-brand-navy);
-  --color-accent-soft: #e3eef4;
+  --color-surface-sunken: #f7f8fa;
+  --color-border: #e1e4ea;
+  --color-accent: var(--color-brand-blue); /* links, focus and buttons: 6:1 on white */
+  --color-accent-strong: var(--color-brand-navy); /* selected states: 10:1 on white */
+  --color-accent-soft: #eaf0fd;
   --color-on-accent: #ffffff;
   --color-up: #b42318; /* spent more: deeper than the brand red */
   --color-down: #1e7b4f; /* spent less */
-  --color-warn: #9a6700; /* close to a limit: 5:1 on white */
-  --color-header: var(--color-brand-navy);
-  --color-on-header: #ffffff;
-  --color-on-header-muted: #b0c6d2;
-  --color-skeleton: #e1e8ee;
+  --color-warn: #9a6700; /* close to a limit */
+  --color-header: #ffffff;
+  --color-header-border: #e1e4ea;
+  --color-header-hover: #eef2fb;
+  --color-on-header: var(--color-brand-navy);
+  --color-on-header-muted: var(--color-ink-muted);
+  --color-skeleton: #e6e9ef;
 
   /* Typography */
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -54,33 +62,36 @@
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-full: 999px;
-  --shadow-panel: 0 1px 2px rgb(0 70 110 / 0.06), 0 6px 20px rgb(0 70 110 / 0.05);
+  --shadow-panel: 0 1px 2px rgb(15 54 154 / 0.06), 0 6px 20px rgb(15 54 154 / 0.05);
 
   /* Layout */
   --content-max: 76rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-brand-red: #ff6b5e;
+/* The dark palette, used only when data-theme="dark" is set on <html> */
+:root[data-theme='dark'] {
+  color-scheme: dark;
 
-    --color-ink: #e6eef4;
-    --color-ink-muted: #9db2c4;
-    --color-page: #0a1824;
-    --color-surface: #11263a;
-    --color-surface-sunken: #0d1f30;
-    --color-border: #22405a;
-    --color-accent: #6fa8cc;
-    --color-accent-strong: #9cc4de;
-    --color-accent-soft: #12324a;
-    --color-on-accent: #0a1824;
-    --color-up: #ff7a70;
-    --color-down: #4cc38a;
-    --color-warn: #e3b341;
-    --color-header: #002a45;
-    --color-on-header: #e6eef4;
-    --color-on-header-muted: #9db2c4;
-    --color-skeleton: #1c364d;
-    --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.3);
-  }
+  --color-brand-red: #ff6b5e;
+
+  --color-ink: #e6eef4;
+  --color-ink-muted: #9db2c4;
+  --color-page: #0a1824;
+  --color-surface: #11263a;
+  --color-surface-sunken: #0d1f30;
+  --color-border: #22405a;
+  --color-accent: #7ea2f2;
+  --color-accent-strong: #a9c0f7;
+  --color-accent-soft: #12324a;
+  --color-on-accent: #0a1824;
+  --color-up: #ff7a70;
+  --color-down: #4cc38a;
+  --color-warn: #e3b341;
+  --color-header: #0a1824;
+  --color-header-border: #22405a;
+  --color-header-hover: #17304a;
+  --color-on-header: #e6eef4;
+  --color-on-header-muted: #9db2c4;
+  --color-skeleton: #1c364d;
+  --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.3);
 }

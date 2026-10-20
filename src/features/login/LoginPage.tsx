@@ -6,21 +6,12 @@ import type { Location } from 'react-router';
 import { getErrorMessage } from '../../api/client';
 import type { SignOutReason } from '../../auth/AuthContext';
 import { useAuth } from '../../auth/useAuth';
-import { MOCK_USERS } from '../../mocks/data/customers';
 import styles from './LoginPage.module.css';
 
 const SIGN_OUT_MESSAGES: Record<SignOutReason, string> = {
   'signed-out': 'You’ve signed out.',
   expired: 'Your session has expired. Please sign in again.',
 };
-
-/** Only shown while the mock API is in use, so reviewers can try both customers. */
-const showDemoAccounts = import.meta.env.VITE_ENABLE_MOCKS !== 'false';
-const DEMO_ACCOUNTS = MOCK_USERS.map((user) => ({
-  name: user.name,
-  username: user.username,
-  password: user.password,
-}));
 
 type FieldErrors = { username?: string; password?: string };
 
@@ -67,13 +58,6 @@ export function LoginPage() {
       passwordRef.current?.focus();
       setSubmitting(false);
     }
-  };
-
-  const fillDemoAccount = (account: (typeof DEMO_ACCOUNTS)[number]) => {
-    setUsername(account.username);
-    setPassword(account.password);
-    setFieldErrors({});
-    setFormError(null);
   };
 
   return (
@@ -170,34 +154,6 @@ export function LoginPage() {
             We will never ask for your password by email, SMS or phone call.
           </p>
         </div>
-
-        {showDemoAccounts && (
-          <section className={styles.demo} aria-labelledby={`${id}-demo`}>
-            <h2 id={`${id}-demo`} className={styles.demoTitle}>
-              Demo accounts
-            </h2>
-            <p className={styles.demoNote}>This demo uses mocked data. Try either customer:</p>
-            <ul className={styles.demoList}>
-              {DEMO_ACCOUNTS.map((account) => (
-                <li key={account.username} className={styles.demoItem}>
-                  <span className={styles.demoDetails}>
-                    <span className={styles.demoName}>{account.name}</span>
-                    <span className={styles.demoCredentials}>
-                      <code>{account.username}</code> / <code>{account.password}</code>
-                    </span>
-                  </span>
-                  <button
-                    type="button"
-                    className={styles.useButton}
-                    onClick={() => fillDemoAccount(account)}
-                  >
-                    Use<span className="visually-hidden">{` ${account.name}’s account`}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
       </div>
     </main>
   );
