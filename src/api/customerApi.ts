@@ -1,6 +1,7 @@
 import {
   toCategoryBreakdown,
   toCustomer,
+  toFilters,
   toGoals,
   toSpendingSummary,
   toSpendingTrends,
@@ -11,6 +12,7 @@ import { apiGet } from './client';
 import {
   categoriesResponseSchema,
   goalsResponseSchema,
+  filtersResponseSchema,
   profileResponseSchema,
   summaryResponseSchema,
   transactionsResponseSchema,
@@ -95,6 +97,17 @@ export const customerApi = {
       await apiGet(
         `${customerPath(auth.customerId)}/goals`,
         goalsResponseSchema,
+        {},
+        withAuth(auth, signal),
+      ),
+    ),
+
+  // 7. GET /api/customers/{customerId}/filters
+  getFilters: async (auth: ApiAuth, signal?: AbortSignal) =>
+    toFilters(
+      await apiGet(
+        `${customerPath(auth.customerId)}/filters`,
+        filtersResponseSchema,
         {},
         withAuth(auth, signal),
       ),

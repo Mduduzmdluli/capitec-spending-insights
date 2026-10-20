@@ -172,3 +172,14 @@ export const goalsResponseSchema = z.object({
   ),
 });
 export type GoalsResponse = z.infer<typeof goalsResponseSchema>;
+
+// ---- 7. Available categories and filters: GET /api/customers/{customerId}/filters ----
+
+export const filtersResponseSchema = z.object({
+  categories: z.array(z.object({ name: z.string(), color: z.string(), icon: z.string() })),
+  dateRangePresets: z.array(
+    // Any string, so a new preset added by the server doesn't break validation
+    z.object({ label: z.string(), value: z.string() }),
+  ),
+});
+export type FiltersResponse = z.infer<typeof filtersResponseSchema>;

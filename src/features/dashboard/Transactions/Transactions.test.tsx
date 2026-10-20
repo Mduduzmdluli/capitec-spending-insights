@@ -1,8 +1,8 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { TransactionsResponse } from '../../../api/contract';
+import type { TransactionsResponse, FiltersResponse } from '../../../api/contract';
 import { server } from '../../../mocks/server';
 import { renderWithProviders } from '../../../test/render';
 import { Transactions } from './Transactions';
@@ -200,6 +200,28 @@ describe('Transactions', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'We couldn’t load your transactions',
+    );
+  });
+
+  it('offers only the categories from the filters endpoint', async () => {
+    const filters: FiltersResponse = {
+      categories: [
+        { name: 'Groceries', color: '#000000', icon: 'shopping-cart' },
+        { name: 'Dining', color: '#000000', icon: 'utensils' },
+      ],
+      dateRangePresets: [],
+    };
+    server.use(http.get('*/api/customers/:customerId/filters', () => HttpResponse.json(filters)));
+    respondWith(page(transactions));
+    renderWithProviders(<Transactions range={range} />);
+
+    const select = screen.getByRole('combobox', { name: 'Category' });
+    await waitFor(() =>
+      expect(
+        within(select)
+          .getAllByRole('option')
+          .map((option) => option.textContent),
+      ).toEqual(['All categories', 'Groceries', 'Eating out']),
     );
   });
 });

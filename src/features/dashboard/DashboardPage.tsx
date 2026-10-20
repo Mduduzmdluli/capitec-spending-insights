@@ -8,10 +8,12 @@ import { SpendingTrend } from './SpendingTrend/SpendingTrend';
 import { Transactions } from './Transactions/Transactions';
 import { BudgetGoals } from './BudgetGoals/BudgetGoals.tsx';
 import { usePeriod } from './usePeriod';
+import { useFilters } from '../../api/hooks';
 
 export function DashboardPage() {
   const [period, setPeriod] = usePeriod();
   const range = useMemo(() => getDateRange(period), [period]);
+  const { data: filters } = useFilters();
 
   return (
     <div className={styles.page}>
@@ -22,7 +24,7 @@ export function DashboardPage() {
             {formatDateRange(range)}
           </p>
         </div>
-        <PeriodSelector value={period} onChange={setPeriod} />
+        <PeriodSelector value={period} onChange={setPeriod} available={filters?.periods} />
       </div>
 
       <SpendingSummary period={period} />

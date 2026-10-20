@@ -10,7 +10,7 @@ import {
   trendsQuerySchema,
 } from '../api/contract';
 import type { Transaction } from '../api/schemas';
-import { loginRequestSchema } from '../api/schemas';
+import { CATEGORY_IDS, loginRequestSchema } from '../api/schemas';
 import { getDateRange } from '../lib/period';
 import {
   computeCategoryBreakdown,
@@ -27,6 +27,14 @@ import { createSession, deleteSession, touchSession } from './sessions';
 
 const CUSTOMER_PATH = '*/api/customers/:customerId';
 const isTest = import.meta.env.MODE === 'test';
+
+/** The date range presets, exactly as in the API document. */
+const DATE_RANGE_PRESETS = [
+  { label: 'Last 7 days', value: '7d' },
+  { label: 'Last 30 days', value: '30d' },
+  { label: 'Last 90 days', value: '90d' },
+  { label: 'Last year', value: '1y' },
+];
 
 /** Lets reviewers preview edge cases in the browser, e.g. /?simulate=error or /?simulate=slow */
 function simulationMode(): string | null {
@@ -318,6 +326,27 @@ const dataHandlers = [
         daysRemaining: goal.daysRemaining,
         status: goal.status,
       })),
+    });
+  }),
+
+  // 7. Available categories and filters
+  http.get(`${CUSTOMER_PATH}/filters`, async ({ params, request }) => {
+    const failure = await precheck(request, params.customerId);
+    if (failure) return failure;
+
+    // Only categories this customer has actually spent in
+    const spentIn = new Set(
+      getTransactions(String(params.customerId))
+        .filter((t) => t.type === 'debit')
+        .map((t) => t.category),
+    );
+
+    return HttpResponse.json({
+      categories: CATEGORY_IDS.filter((id) => spentIn.has(id)).map((id) => ({
+        name: CATEGORY_API_NAMES[id],
+        ...CATEGORY_STYLES[id],
+      })),
+      dateRangePresets: DATE_RANGE_PRESETS,
     });
   }),
 ];

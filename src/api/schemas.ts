@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Period } from '../lib/period';
 
 /**
  * The app's own data model, used throughout the UI. API responses arrive in the shape
@@ -103,6 +104,13 @@ export type Goal = {
   percentUsed: number;
   daysRemaining: number;
   status: GoalStatus;
+};
+
+export type Filters = {
+  /** The categories the customer can filter transactions by, in the server's order */
+  categories: CategoryId[];
+  /** The periods the server offers, in its order */
+  periods: Period[];
 };
 
 // ---- Authentication (an addition beyond the documented API) ----

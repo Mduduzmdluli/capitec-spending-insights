@@ -7,11 +7,13 @@ import type {
   SummaryResponse,
   TransactionsResponse,
   TrendsResponse,
+  FiltersResponse,
 } from './contract';
 import type {
   CategoryBreakdown,
   CategoryId,
   Customer,
+  Filters,
   SpendingSummary,
   SpendingTrends,
   Transaction,
@@ -19,6 +21,7 @@ import type {
   TransactionQuery,
   Goal,
 } from './schemas';
+import { isPeriod } from '../lib/period';
 
 // ---- Money ----
 
@@ -126,6 +129,21 @@ export function toGoals(response: GoalsResponse): Goal[] {
     daysRemaining: goal.daysRemaining,
     status: goal.status,
   }));
+}
+
+/**
+ * Options the app doesn't recognise are skipped rather than failing the whole page,
+ * since filters only refine what's offered. Income is left out: the transactions
+ * endpoint lists spending.
+ */
+export function toFilters(response: FiltersResponse): Filters {
+  const categories = response.categories
+    .map((entry) => categoryIdFromApiName(entry.name))
+    .filter((id): id is CategoryId => id !== undefined && id !== 'income');
+
+  const periods = response.dateRangePresets.map((preset) => preset.value).filter(isPeriod);
+
+  return { categories: [...new Set(categories)], periods: [...new Set(periods)] };
 }
 
 // ---- Requests ----

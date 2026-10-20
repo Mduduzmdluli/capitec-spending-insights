@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   categoriesResponseSchema,
   goalsResponseSchema,
+  filtersResponseSchema,
   profileResponseSchema,
   summaryResponseSchema,
   transactionsResponseSchema,
@@ -101,5 +102,23 @@ describe('the documented API contract', () => {
     for (const goal of goals) {
       expect(goal.percentageUsed).toBeCloseTo((goal.currentSpent / goal.monthlyBudget) * 100, 1);
     }
+  });
+
+  it('7. serves the available categories and date range presets', async () => {
+    const filters = filtersResponseSchema.parse(await getJson('/filters'));
+
+    expect(filters.categories.map((c) => c.name)).toContain('Groceries');
+    expect(filters.dateRangePresets.map((p) => p.value)).toEqual(['7d', '30d', '90d', '1y']);
+  });
+
+  it('7. lists only the categories a customer has spent in', async () => {
+    const { token } = createSession('cust_002');
+    const response = await fetch(apiUrl('/api/customers/cust_002/filters'), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const filters = filtersResponseSchema.parse(await response.json());
+
+    // The second customer has no car
+    expect(filters.categories.map((c) => c.name)).not.toContain('Fuel');
   });
 });
