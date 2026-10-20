@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
+import type { SignOutReason } from '../../auth/AuthContext';
+import { InactivityGuard } from '../../auth/InactivityGuard';
 import { useAuth } from '../../auth/useAuth';
 import { AccountMenu } from './AccountMenu';
 import styles from './AppShell.module.css';
@@ -13,8 +15,8 @@ export function AppShell({ children }: AppShellProps) {
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = (reason: SignOutReason = 'signed-out') => {
+    signOut(reason);
     // Deliberately not remembering this page: the next person to sign in starts fresh
     navigate('/login', { replace: true });
   };
@@ -36,13 +38,17 @@ export function AppShell({ children }: AppShellProps) {
             </span>
             <span className={styles.productName}>Spending insights</span>
           </div>
-          <AccountMenu onSignOut={handleSignOut} />
+          <AccountMenu onSignOut={() => handleSignOut()} />
         </div>
       </header>
       <main id="main" className={styles.main} tabIndex={-1}>
         {children}
       </main>
       <BackToTop targetId="main" />
+      <InactivityGuard
+        onTimeout={() => handleSignOut('inactive')}
+        onSignOut={() => handleSignOut()}
+      />
     </div>
   );
 }
